@@ -4,7 +4,7 @@ export default function ReconciliationPage() {
   return (
     <SitePage
       title="Reconciliation"
-      description="How operators review mismatches, reports, and ledger alignment in Payflow."
+      description="How operators review mismatches, reports, and ledger alignment in Sutura."
     >
       <ContentBlock title="What reconciliation covers">
         <p>

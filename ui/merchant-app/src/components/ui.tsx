@@ -60,10 +60,10 @@ export function LinkButton({ label, onPress }: { label: string; onPress: () => v
   );
 }
 
-export function PayflowLogo({ size = 40 }: { size?: number }) {
+export function SuturaLogo({ size = 40 }: { size?: number }) {
   return (
     <Image
-      source={{ uri: "https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/payflow_no_bg_f0l7on.png" }}
+      source={{ uri: "https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png" }}
       style={{ width: size, height: size }}
       resizeMode="contain"
     />

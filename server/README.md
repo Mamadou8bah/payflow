@@ -1,4 +1,4 @@
-# Payflow - Payment Processing Platform
+# Sutura - Payment Processing Platform
 
 A comprehensive, high-performance payment processing platform built with Spring Boot 4.0.4, designed to handle complex financial transactions, wallet management, risk assessment, and reconciliation at scale.
 
@@ -23,7 +23,7 @@ A comprehensive, high-performance payment processing platform built with Spring 
 
 ## Overview
 
-Payflow is an enterprise-grade payment processing platform that provides:
+Sutura is an enterprise-grade payment processing platform that provides:
 
 - **[AUTH] Secure Authentication & Authorization**: JWT-based auth with API key support and refresh tokens
 - **[WALLET] Wallet Management**: Multi-currency wallet support with KYC levels and transaction limits
@@ -157,11 +157,11 @@ Notes:
 ## Project Structure
 
 ```
-payflow/
+sutura/
 ├── src/
 │   ├── main/
-│   │   ├── java/com/mamadou/payflow/
-│   │   │   ├── PayflowApplication.java          # Main application class
+│   │   ├── java/com/mamadou/sutura/
+│   │   │   ├── SuturaApplication.java          # Main application class
 │   │   │   ├── admin/                           # Admin module
 │   │   │   │   ├── controller/
 │   │   │   │   ├── dto/
@@ -259,7 +259,7 @@ payflow/
 │   │       ├── static/                          # Static resources
 │   │       └── templates/                       # Thymeleaf templates
 │   └── test/
-│       └── java/com/mamadou/payflow/            # Test classes
+│       └── java/com/mamadou/sutura/            # Test classes
 ├── pom.xml                                      # Maven configuration
 ├── mvnw & mvnw.cmd                              # Maven wrapper scripts
 ├── docker-compose.yml                           # Local dev environment
@@ -289,8 +289,8 @@ payflow/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/Mamadou8bah/payflow-server.git
-cd payflow-server
+git clone https://github.com/Mamadou8bah/sutura-server.git sutura-server
+cd sutura-server
 ```
 
 ### Step 2: Set Up Local Database
@@ -307,11 +307,11 @@ This starts:
 #### Manual Setup
 ```bash
 # Create PostgreSQL database
-createdb payflow
+createdb sutura
 
 # Or using psql
 psql -U postgres
-CREATE DATABASE payflow;
+CREATE DATABASE sutura;
 ```
 
 ### Step 3: Configure Environment Variables
@@ -320,7 +320,7 @@ Create a `.env` file in the project root:
 
 ```bash
 # Database Configuration
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/payflow
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/sutura
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=bah12
 
@@ -340,20 +340,20 @@ TWILIO_AUTH_TOKEN=your_twilio_auth_token
 TWILIO_FROM_NUMBER=+1234567890
 
 # Email Configuration
-PAYFLOW_EMAIL_API_KEY=your_email_api_key
-PAYFLOW_EMAIL_FROM=no-reply@payflow.local
+SUTURA_EMAIL_API_KEY=your_email_api_key
+SUTURA_EMAIL_FROM=no-reply@sutura.local
 
 # Webhook Configuration
 MODEMPAY_WEBHOOK_SIGNING_SECRET=your_webhook_secret
 MODEMPAY_WEBHOOK_SIGNATURE_HEADER=X-ModemPay-Signature
 
 # Risk Management
-PAYFLOW_RISK_CRITICAL_THRESHOLD=9.0
-PAYFLOW_RISK_HIGH_THRESHOLD=7.0
-PAYFLOW_RISK_MEDIUM_THRESHOLD=5.0
+SUTURA_RISK_CRITICAL_THRESHOLD=9.0
+SUTURA_RISK_HIGH_THRESHOLD=7.0
+SUTURA_RISK_MEDIUM_THRESHOLD=5.0
 
 # SMS Provider
-PAYFLOW_SMS_PROVIDER=noop  # or 'twilio' for production
+SUTURA_SMS_PROVIDER=noop  # or 'twilio' for production
 ```
 
 ### Step 4: Build the Project
@@ -376,7 +376,7 @@ Key configuration sections:
 - **Port**: 5000 (configurable via `server.port`)
 
 #### Database
-- **URL**: `jdbc:postgresql://localhost:5432/payflow`
+- **URL**: `jdbc:postgresql://localhost:5432/sutura`
 - **DDL**: `create` (drops/recreates schema on startup)
 
 #### Redis Cache
@@ -402,7 +402,7 @@ Key configuration sections:
 
 #### Monitoring
 - **Metrics Exposure**: health, metrics, prometheus, info
-- **Logging Level**: INFO (root), DEBUG (payflow package)
+- **Logging Level**: INFO (root), DEBUG (sutura package)
 
 ## Running the Application
 
@@ -425,7 +425,7 @@ docker run -d -p 6379:6379 --name redis redis:7
 
 # Or build and run the JAR
 ./mvnw clean package
-java -jar target/payflow-0.0.1-SNAPSHOT.jar
+java -jar target/sutura-0.0.1-SNAPSHOT.jar
 ```
 
 ### Step 3: Verify Application is Running
@@ -685,7 +685,7 @@ GET /actuator/info
 
 ### [ARCHITECTURE] System Architecture Overview
 
-Payflow implements a comprehensive, multi-layered architecture optimized for high-throughput payment processing:
+Sutura implements a comprehensive, multi-layered architecture optimized for high-throughput payment processing:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -928,7 +928,7 @@ User Request (HTTP)
 ## Concurrency & Performance
 
 ### Overview
-Payflow implements sophisticated concurrency patterns for high-throughput payment processing. See [CONCURRENCY_GUIDE.md](payflow/CONCURRENCY_GUIDE.md) for detailed information.
+Sutura implements sophisticated concurrency patterns for high-throughput payment processing. See [CONCURRENCY_GUIDE.md](sutura/CONCURRENCY_GUIDE.md) for detailed information.
 
 ### [ASYNC] Async Executors
 
@@ -969,11 +969,11 @@ Payflow implements sophisticated concurrency patterns for high-throughput paymen
 
 ## Modem Pay Webhook Integration
 
-Payflow integrates with [Modem Pay](https://modempay.com) to handle real-time payment webhook events, enabling automatic transaction status updates.
+Sutura integrates with [Modem Pay](https://modempay.com) to handle real-time payment webhook events, enabling automatic transaction status updates.
 
 ### Webhook Events
 
-Payflow processes the following Modem Pay webhook events:
+Sutura processes the following Modem Pay webhook events:
 
 | Event | Description | Transaction Status |
 |-------|-------------|-------------------|
@@ -1003,7 +1003,7 @@ Payflow processes the following Modem Pay webhook events:
 ### How It Works
 
 ```
-Modem Pay → HMAC-SHA256 Signature → Payflow Webhook Endpoint
+Modem Pay → HMAC-SHA256 Signature → Sutura Webhook Endpoint
                                     ↓
                           Verify Signature (Security)
                                     ↓
@@ -1016,7 +1016,7 @@ Modem Pay → HMAC-SHA256 Signature → Payflow Webhook Endpoint
 
 ### Usage Example
 
-When creating a payment with Modem Pay, pass your Payflow transaction ID as the `reference`:
+When creating a payment with Modem Pay, pass your Sutura transaction ID as the `reference`:
 
 ```json
 {
@@ -1027,7 +1027,7 @@ When creating a payment with Modem Pay, pass your Payflow transaction ID as the 
 }
 ```
 
-When the webhook arrives, Payflow automatically:
+When the webhook arrives, Sutura automatically:
 1. Verifies the HMAC-SHA256 signature
 2. Looks up the transaction by reference
 3. Updates the transaction status
@@ -1313,7 +1313,7 @@ Run with debug output:
 ./mvnw spring-boot:run -Dspring-boot.run.arguments="--debug"
 
 # Or with custom logging
-./mvnw spring-boot:run -Dlogging.level.com.mamadou.payflow=TRACE
+./mvnw spring-boot:run -Dlogging.level.com.mamadou.sutura=TRACE
 ```
 
 ### [RESET] Database Schema Reset
@@ -1358,13 +1358,13 @@ curl http://localhost:5000/actuator/health/readiness
 
 ```bash
 # View logs
-tail -f logs/payflow.log
+tail -f logs/sutura.log
 
 # Search for errors
-grep "ERROR" logs/payflow.log
+grep "ERROR" logs/sutura.log
 
 # Follow logs in real-time
-tail -f logs/payflow.log | grep WARN
+tail -f logs/sutura.log | grep WARN
 ```
 
 ## Security Considerations
@@ -1409,9 +1409,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support & Contact
 
 For issues, questions, or contributions:
-- **Repository**: https://github.com/Mamadou8bah/payflow-server
-- **Issues**: https://github.com/Mamadou8bah/payflow-server/issues
-- **Email**: support@payflow.local
+- **Repository**: https://github.com/Mamadou8bah/sutura-server
+- **Issues**: https://github.com/Mamadou8bah/sutura-server/issues
+- **Email**: support@sutura.local
 
 ## Changelog
 

@@ -1,10 +1,10 @@
-# Payflow UI Workspace
+# Sutura UI Workspace
 
 This folder contains three frontend apps:
 
 - `web`: Next.js website for the landing page, marketing site, admin area, and developer portal.
-- `payflow-app`: Expo React Native app for consumer users.
-- `payflow-agent`: Expo React Native app for agents.
+- `sutura-app`: Expo React Native app for consumer users.
+- `sutura-agent`: Expo React Native app for agents.
 
 ## Web
 
@@ -14,18 +14,18 @@ npm install
 npm run dev
 ```
 
-## Payflow App
+## Sutura App
 
 ```bash
-cd ui/payflow-app
+cd ui/sutura-app
 npm install
 npx expo start
 ```
 
-## Payflow Agent
+## Sutura Agent
 
 ```bash
-cd ui/payflow-agent
+cd ui/sutura-agent
 npm install
 npx expo start
 ```

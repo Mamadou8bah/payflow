@@ -16,7 +16,7 @@ export function SitePage({
       <main className="min-h-screen overflow-x-clip bg-slate-100 text-slate-900">
         <section className="border-b border-slate-200 bg-white">
           <div className="mx-auto w-[min(880px,calc(100%-1.5rem))] py-10 sm:py-14">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-600">Payflow</p>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-600">Sutura</p>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
             {description ? <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">{description}</p> : null}
           </div>
@@ -44,7 +44,7 @@ export function SitePage({
             ))}
           </div>
           <div className="border-t border-slate-100 py-4 text-center text-sm text-slate-500">
-            © 2026 Payflow. All rights reserved.
+            © 2026 Sutura. All rights reserved.
           </div>
         </footer>
       </main>

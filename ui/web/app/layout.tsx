@@ -8,8 +8,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata = {
-  title: "Payflow",
-  description: "Payflow web platform for consumers, merchants, admins, and developers"
+  title: "Sutura",
+  description: "Sutura web platform for consumers, merchants, admins, and developers"
 };
 
 export const viewport: Viewport = {

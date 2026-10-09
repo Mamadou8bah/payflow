@@ -121,11 +121,11 @@ export function LandingHeader({ groups }: { groups: LandingNavGroup[] }) {
       <div className="mx-auto flex h-14 w-[min(1280px,calc(100%-1.5rem))] items-center gap-3 sm:h-16">
         <a href="/" className="flex shrink-0 items-center gap-2.5">
           <img
-            src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/payflow_no_bg_f0l7on.png"
-            alt="Payflow"
+            src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+            alt="Sutura"
             className="h-8 w-8 object-contain sm:h-9 sm:w-9"
           />
-          <span className="text-base font-black tracking-tight text-[#123c91] sm:text-lg">Payflow</span>
+          <span className="text-base font-black tracking-tight text-[#123c91] sm:text-lg">Sutura</span>
         </a>
 
         <nav className="mx-auto hidden items-center justify-center gap-0.5 text-sm font-semibold text-slate-700 md:flex lg:gap-1">

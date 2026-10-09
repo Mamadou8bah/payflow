@@ -2,21 +2,21 @@
 
 ## Overview
 
-This guide covers deploying Payflow to production using Docker, Docker Compose, and environment configuration.
+This guide covers deploying Sutura to production using Docker, Docker Compose, and environment configuration.
 
 ## Quick Start with Docker
 
 ### 1. Build Docker Image
 
 ```bash
-# Navigate to payflow directory
-cd payflow
+# Navigate to sutura directory
+cd sutura
 
 # Build the image
-docker build -t payflow:latest .
+docker build -t sutura:latest .
 
 # Or with a specific tag
-docker build -t payflow:1.0.0 .
+docker build -t sutura:1.0.0 .
 ```
 
 ### 2. Run Container Locally
@@ -24,15 +24,15 @@ docker build -t payflow:1.0.0 .
 ```bash
 # Run with environment variables
 docker run -d \
-  --name payflow \
+  --name sutura \
   -p 5000:5000 \
   -e SPRING_PROFILES_ACTIVE=prod \
-  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/payflow \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/sutura \
   -e SPRING_DATASOURCE_USERNAME=postgres \
   -e SPRING_DATASOURCE_PASSWORD=your_password \
   -e REDIS_HOST=host.docker.internal \
   -e JWT_SECRET=your_jwt_secret_key \
-  payflow:latest
+  sutura:latest
 ```
 
 ### 3. Docker Compose for Full Stack
@@ -46,7 +46,7 @@ cp .env.example .env
 docker-compose -f docker-compose.prod.yml up -d
 
 # View logs
-docker-compose -f docker-compose.prod.yml logs -f payflow-app
+docker-compose -f docker-compose.prod.yml logs -f sutura-app
 
 # Stop services
 docker-compose -f docker-compose.prod.yml down
@@ -58,7 +58,7 @@ docker-compose -f docker-compose.prod.yml down
 
 ```bash
 # Database
-SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/payflow
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sutura
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=your_secure_password
 
@@ -103,24 +103,24 @@ See `.env.example` for all available options including:
 ## Logging
 
 ### Development
-- Logs to console (stdout) and `logs/payflow.log`
+- Logs to console (stdout) and `logs/sutura.log`
 - Debug level for application code
 - 10 MB max file size, 10 file history
 
 ### Production
-- Logs to `/app/logs/payflow.log` (container mounted volume)
+- Logs to `/app/logs/sutura.log` (container mounted volume)
 - Warn level for root, Info level for application
 - 100 MB max file size, 30 file history, 10 GB total cap
 - Structured JSON logging recommended with ELK stack
 
 ## Rate Limiting
 
-Payflow implements advanced per-user and per-API-key rate limiting.
+Sutura implements advanced per-user and per-API-key rate limiting.
 
 ### Configuration (application.yaml)
 
 ```yaml
-payflow:
+sutura:
   ratelimit:
     login:
       requests: 5
@@ -139,7 +139,7 @@ payflow:
 ### Using Rate Limits in Controllers
 
 ```java
-import com.mamadou.payflow.common.ratelimit.RateLimit;
+import com.mamadou.sutura.common.ratelimit.RateLimit;
 
 @RestController
 @RequestMapping("/api/transfers")
@@ -251,10 +251,10 @@ For future production releases, consider implementing Flyway or Liquibase:
 
 ```bash
 # Build image
-docker build -t your-registry/payflow:1.0.0 payflow/
+docker build -t your-registry/sutura:1.0.0 sutura/
 
 # Push to registry
-docker push your-registry/payflow:1.0.0
+docker push your-registry/sutura:1.0.0
 ```
 
 ### Deploy to Kubernetes
@@ -267,13 +267,13 @@ See `.github/k8s/` for Kubernetes manifests (future implementation).
 
 ```bash
 # Check logs
-docker-compose -f docker-compose.prod.yml logs payflow-app
+docker-compose -f docker-compose.prod.yml logs sutura-app
 
 # Verify environment variables
-docker inspect payflow-app | grep -i env
+docker inspect sutura-app | grep -i env
 
 # Check database connection
-docker exec payflow-app nc -zv postgres 5432
+docker exec sutura-app nc -zv postgres 5432
 ```
 
 ### Rate limiting not working
@@ -392,10 +392,10 @@ logging:
 
 ```bash
 # Backup PostgreSQL
-docker exec payflow-postgres pg_dump -U postgres payflow > backup.sql
+docker exec sutura-postgres pg_dump -U postgres sutura > backup.sql
 
 # Restore PostgreSQL
-docker exec -i payflow-postgres psql -U postgres payflow < backup.sql
+docker exec -i sutura-postgres psql -U postgres sutura < backup.sql
 ```
 
 ### Redis Backup
@@ -408,3 +408,12 @@ For issues or questions:
 - Check logs: `docker-compose logs -f`
 - Review health endpoints: `http://localhost:5000/actuator/health`
 - Check rate limits: `curl http://localhost:5000/actuator/metrics/rate_limit.requests`
+
+## Sentinel compliance dependency
+
+Run Sentinel separately and configure `SUTURA_SENTINEL_BASE_URL` and
+`SUTURA_SENTINEL_API_KEY` before starting the production Compose stack.
+The API key must belong to the Sutura tenant. Review, block, invalid responses
+and unreachable scoring stop the current pre-execution path. See
+[the integration contract](../docs/sentinel-integration.md) for configuration
+and the remaining durable-review and settlement work.

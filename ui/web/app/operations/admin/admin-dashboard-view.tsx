@@ -92,6 +92,7 @@ export function AdminDashboardView() {
         criticalRiskFlags: dashboard.criticalRiskFlags,
         unresolvedMismatches: dashboard.unresolvedReconciliationMismatches,
         operationCounts: {
+          reconciliations: dashboard.operationCounts.reconciliations ?? 0,
           freezes: dashboard.operationCounts.freezes ?? 0,
           reversals: dashboard.operationCounts.reversals ?? 0,
           reprocesses: dashboard.operationCounts.reprocesses ?? 0,
@@ -99,8 +100,9 @@ export function AdminDashboardView() {
         wallets: wallets.map((w) => ({
           id: w.id,
           owner: w.ownerEmail,
+          email: w.ownerEmail,
           currency: w.currency,
-          balance: Number(w.balance),
+          balance: String(w.balance),
           status: w.status as AdminWallet["status"],
           kycLevel: "BASIC" as const,
           dailyLimit: 0,
@@ -183,7 +185,7 @@ export function AdminDashboardView() {
       activeWallets: Math.max(0, prev.activeWallets - 1),
       operationCounts: { ...prev.operationCounts, freezes: prev.operationCounts.freezes + 1 },
     }));
-    addAudit({ actionType: "FREEZE_WALLET", entityType: "WALLET", entityId: walletId, actor: "admin@payflow.local", changeDescription: freezeForm.reason, success: true });
+    addAudit({ actionType: "FREEZE_WALLET", entityType: "WALLET", entityId: walletId, actor: "admin@sutura.local", changeDescription: freezeForm.reason, success: true });
     notify("success", `Wallet ${walletId} has been frozen`);
     setFreezeForm({ walletId: "", reason: "", permanent: false });
   }
@@ -213,7 +215,7 @@ export function AdminDashboardView() {
       frozenWallets: Math.max(0, prev.frozenWallets - 1),
       activeWallets: prev.activeWallets + 1,
     }));
-    addAudit({ actionType: "UNFREEZE_WALLET", entityType: "WALLET", entityId: walletId, actor: "admin@payflow.local", changeDescription: "Admin unfreeze", success: true });
+    addAudit({ actionType: "UNFREEZE_WALLET", entityType: "WALLET", entityId: walletId, actor: "admin@sutura.local", changeDescription: "Admin unfreeze", success: true });
     notify("success", `Wallet ${walletId} has been unfrozen`);
     setUnfreezeWalletId("");
   }
@@ -246,7 +248,7 @@ export function AdminDashboardView() {
       actionType: "REVERSE_TRANSACTION",
       entityType: "TRANSACTION",
       entityId: transactionId,
-      actor: "admin@payflow.local",
+      actor: "admin@sutura.local",
       changeDescription: `${reverseForm.reason}${reverseForm.refundToWallet ? " (with refund)" : ""}`,
       success: true,
     });
@@ -265,7 +267,7 @@ export function AdminDashboardView() {
       webhooks: prev.webhooks.map((w) => (w.id === webhookId ? { ...w, status: "PENDING_REPROCESS" } : w)),
       operationCounts: { ...prev.operationCounts, reprocesses: prev.operationCounts.reprocesses + 1 },
     }));
-    addAudit({ actionType: "REPROCESS_WEBHOOK", entityType: "WEBHOOK_EVENT", entityId: webhookId, actor: "admin@payflow.local", changeDescription: webhookForm.reason, success: true });
+    addAudit({ actionType: "REPROCESS_WEBHOOK", entityType: "WEBHOOK_EVENT", entityId: webhookId, actor: "admin@sutura.local", changeDescription: webhookForm.reason, success: true });
     notify("success", `Webhook ${webhookId} marked for reprocessing`);
     setWebhookForm({ webhookId: "", reason: "" });
   }
@@ -281,7 +283,7 @@ export function AdminDashboardView() {
       mismatchesFound: type === "WALLET_LEDGER" ? 1 : 0,
       mismatchesResolved: 0,
       summary: type === "WALLET_LEDGER" ? "Manual wallet-ledger reconciliation completed" : "Webhook-deposit reconciliation completed",
-      triggeredBy: "admin@payflow.local",
+      triggeredBy: "admin@sutura.local",
       automated: false,
     };
     setData((prev) => ({
@@ -290,7 +292,7 @@ export function AdminDashboardView() {
       operationCounts: { ...prev.operationCounts, reconciliations: prev.operationCounts.reconciliations + 1 },
       unresolvedReconciliationMismatches: type === "WALLET_LEDGER" ? prev.unresolvedReconciliationMismatches + 1 : prev.unresolvedReconciliationMismatches,
     }));
-    addAudit({ actionType: "TRIGGER_RECONCILIATION", entityType: "RECONCILIATION_REPORT", entityId: report.id, actor: "admin@payflow.local", changeDescription: `Triggered ${type}`, success: true });
+    addAudit({ actionType: "TRIGGER_RECONCILIATION", entityType: "RECONCILIATION_REPORT", entityId: report.id, actor: "admin@sutura.local", changeDescription: `Triggered ${type}`, success: true });
     notify("success", "Reconciliation run completed");
   }
 
@@ -313,7 +315,7 @@ export function AdminDashboardView() {
       totalRiskFlags: Math.max(0, prev.totalRiskFlags - 1),
       criticalRiskFlags: flag.level === "CRITICAL" ? Math.max(0, prev.criticalRiskFlags - 1) : prev.criticalRiskFlags,
     }));
-    addAudit({ actionType: "RESOLVE_RISK_FLAG", entityType: "RISK_FLAG", entityId: flagId, actor: "admin@payflow.local", changeDescription: resolveForm.resolutionAction, success: true });
+    addAudit({ actionType: "RESOLVE_RISK_FLAG", entityType: "RISK_FLAG", entityId: flagId, actor: "admin@sutura.local", changeDescription: resolveForm.resolutionAction, success: true });
     notify("success", `Risk flag ${flagId} resolved`);
     setResolveForm({ flagId: "", resolutionAction: "" });
   }
@@ -354,7 +356,7 @@ export function AdminDashboardView() {
         unresolvedMismatchCount: Math.max(0, prev.reconciliationStatus.unresolvedMismatchCount - 1),
       },
     }));
-    addAudit({ actionType: "RESOLVE_MISMATCH", entityType: "RECONCILIATION_MISMATCH", entityId: mismatchId, actor: "admin@payflow.local", changeDescription: mismatchResolveForm.resolutionAction, success: true });
+    addAudit({ actionType: "RESOLVE_MISMATCH", entityType: "RECONCILIATION_MISMATCH", entityId: mismatchId, actor: "admin@sutura.local", changeDescription: mismatchResolveForm.resolutionAction, success: true });
     notify("success", `Mismatch ${mismatchId} resolved`);
     setMismatchResolveForm({ mismatchId: "", resolutionAction: "" });
   }
@@ -384,7 +386,7 @@ export function AdminDashboardView() {
       return;
     }
 
-    addAudit({ actionType: "RISK_EVALUATE", entityType: "TRANSACTION", entityId: transactionId, actor: "admin@payflow.local", changeDescription: `Amount ${amount}`, success: true });
+    addAudit({ actionType: "RISK_EVALUATE", entityType: "TRANSACTION", entityId: transactionId, actor: "admin@sutura.local", changeDescription: `Amount ${amount}`, success: true });
     setRiskEvalForm({ walletId: "", amount: "", transactionId: "" });
   }
 
@@ -430,7 +432,7 @@ export function AdminDashboardView() {
     const webhookId = Number(webhookReplayId);
     const webhook = data.webhooks.find((w) => w.id === webhookId);
     if (!webhook) return notify("error", `Webhook ${webhookId} not found`);
-    addAudit({ actionType: "REPLAY_WEBHOOK", entityType: "WEBHOOK_EVENT", entityId: webhookId, actor: "admin@payflow.local", changeDescription: "Replay via POST /api/v1/webhooks/replay", success: true });
+    addAudit({ actionType: "REPLAY_WEBHOOK", entityType: "WEBHOOK_EVENT", entityId: webhookId, actor: "admin@sutura.local", changeDescription: "Replay via POST /api/v1/webhooks/replay", success: true });
     notify("success", `Webhook ${webhookId} replay queued`);
     setWebhookReplayId("");
   }
@@ -453,7 +455,7 @@ export function AdminDashboardView() {
             dateRange={chartRange}
             onDateRangeChange={setChartRange}
             onDownload={() =>
-              downloadCsv("payflow-admin-overview", ["Metric", "Value"], [
+              downloadCsv("sutura-admin-overview", ["Metric", "Value"], [
                 ["Gross volume", data.volumeToday[0]?.amount ?? ""],
                 ["Active wallets", String(data.activeWallets)],
                 ["Total transactions", String(data.totalTransactions)],
@@ -790,7 +792,7 @@ export function AdminDashboardView() {
         <DataTable
           title="Audit trail"
           subtitle={`GET /api/v1/admin/audit-trail · ${data.auditLogs.length} records`}
-          exportFilename="payflow-audit-trail"
+          exportFilename="sutura-audit-trail"
           searchPlaceholder="Search by action, actor, entity…"
           dateKey="timestamp"
           rows={data.auditLogs as unknown as Record<string, unknown>[]}
@@ -822,7 +824,7 @@ function WalletTable({ wallets, onFreeze, onUnfreeze }: { wallets: AdminWallet[]
     <DataTable
       title="Wallets"
       subtitle={`${wallets.length} managed accounts · GET /api/v1/admin/wallets`}
-      exportFilename="payflow-admin-wallets"
+      exportFilename="sutura-admin-wallets"
       searchPlaceholder="Search by owner, ID, status…"
       rows={wallets as unknown as Record<string, unknown>[]}
       columns={[
@@ -855,7 +857,7 @@ function TransactionTable({ transactions, onReverse }: { transactions: AdminTran
     <DataTable
       title="Transactions"
       subtitle="Pending, failed, and completed transfers"
-      exportFilename="payflow-admin-transactions"
+      exportFilename="sutura-admin-transactions"
       dateKey="createdAt"
       searchPlaceholder="Search by ID, reference, amount, status…"
       rows={transactions as unknown as Record<string, unknown>[]}
@@ -888,7 +890,7 @@ function WebhookTable({ webhooks, onReprocess }: { webhooks: AdminWebhook[]; onR
     <DataTable
       title="Webhook events"
       subtitle="Provider callbacks and delivery status"
-      exportFilename="payflow-admin-webhooks"
+      exportFilename="sutura-admin-webhooks"
       dateKey="receivedAt"
       searchPlaceholder="Search by event, ID, status…"
       rows={webhooks as unknown as Record<string, unknown>[]}
@@ -918,7 +920,7 @@ function ReconciliationTable({ reports, unresolved }: { reports: ReconciliationR
     <DataTable
       title="Reconciliation reports"
       subtitle={`${unresolved} unresolved mismatches`}
-      exportFilename="payflow-admin-reconciliation-reports"
+      exportFilename="sutura-admin-reconciliation-reports"
       dateKey="startedAt"
       searchPlaceholder="Search reports by type, status, summary…"
       rows={reports as unknown as Record<string, unknown>[]}
@@ -939,7 +941,7 @@ function MismatchTable({ mismatches, onResolve }: { mismatches: ReconciliationMi
     <DataTable
       title="Reconciliation mismatches"
       subtitle="GET /api/v1/reconciliation/mismatches"
-      exportFilename="payflow-admin-reconciliation-mismatches"
+      exportFilename="sutura-admin-reconciliation-mismatches"
       dateKey="createdAt"
       searchPlaceholder="Search by type, entity, variance…"
       rows={mismatches as unknown as Record<string, unknown>[]}
@@ -972,7 +974,7 @@ function RiskFlagTable({ flags, onResolve }: { flags: AdminRiskFlag[]; onResolve
     <DataTable
       title="Risk flags"
       subtitle="Open and resolved monitoring alerts"
-      exportFilename="payflow-admin-risk-flags"
+      exportFilename="sutura-admin-risk-flags"
       dateKey="createdAt"
       searchPlaceholder="Search by wallet, rule, level…"
       rows={flags as unknown as Record<string, unknown>[]}

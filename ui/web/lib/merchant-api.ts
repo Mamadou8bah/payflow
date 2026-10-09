@@ -83,7 +83,7 @@ export const merchantRegistrationApi = {
 export function saveMerchantSession(auth: CompleteResponse["auth"], businessName: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem(
-    "payflow_merchant_session",
+    "sutura_merchant_session",
     JSON.stringify({
       accessToken: auth.accessToken,
       refreshToken: auth.refreshToken,
@@ -100,14 +100,14 @@ export function updateMerchantSession(tokens: { accessToken: string; refreshToke
   const current = getMerchantTokenSession();
   if (!current) return;
   localStorage.setItem(
-    "payflow_merchant_session",
+    "sutura_merchant_session",
     JSON.stringify({ ...current, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),
   );
 }
 
 export function clearMerchantSession() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem("payflow_merchant_session");
+  localStorage.removeItem("sutura_merchant_session");
 }
 
 export function getMerchantTokenSession(): {
@@ -119,7 +119,7 @@ export function getMerchantTokenSession(): {
   businessName: string;
 } | null {
   if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem("payflow_merchant_session");
+  const raw = localStorage.getItem("sutura_merchant_session");
   if (!raw) return null;
   try {
     return JSON.parse(raw) as ReturnType<typeof getMerchantTokenSession>;

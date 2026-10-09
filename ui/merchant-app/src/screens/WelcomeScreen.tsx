@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { LinkButton, PayflowLogo, PrimaryButton, Screen } from "../components/ui";
+import { LinkButton, SuturaLogo, PrimaryButton, Screen } from "../components/ui";
 import { useApp } from "../context/AppContext";
 import { colors } from "../theme";
 
@@ -9,8 +9,8 @@ export function WelcomeScreen() {
   return (
     <Screen>
       <View style={styles.hero}>
-        <PayflowLogo size={56} />
-        <Text style={styles.eyebrow}>Payflow Merchant</Text>
+        <SuturaLogo size={56} />
+        <Text style={styles.eyebrow}>Sutura Merchant</Text>
         <Text style={styles.title}>Accept payments for your business</Text>
         <Text style={styles.body}>
           Register your Gambian business, verify your phone, and start collecting payments once approved.

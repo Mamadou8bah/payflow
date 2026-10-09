@@ -62,7 +62,7 @@ export const mockCustomerDashboard: CustomerDashboardData = {
       amount: 4500,
       currency: "GMD",
       status: "COMPLETED",
-      method: "Payflow wallet",
+      method: "Sutura wallet",
       time: "2026-06-27T10:40:00Z",
     },
     {
@@ -72,7 +72,7 @@ export const mockCustomerDashboard: CustomerDashboardData = {
       amount: 12000,
       currency: "GMD",
       status: "COMPLETED",
-      method: "Payflow wallet",
+      method: "Sutura wallet",
       time: "2026-06-27T10:12:00Z",
     },
     {
@@ -102,7 +102,7 @@ export const mockCustomerDashboard: CustomerDashboardData = {
       amount: 2250,
       currency: "GMD",
       status: "COMPLETED",
-      method: "Payflow wallet",
+      method: "Sutura wallet",
       time: "2026-06-26T09:58:00Z",
     },
     {

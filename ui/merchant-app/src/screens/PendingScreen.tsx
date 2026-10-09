@@ -1,24 +1,25 @@
 import { StyleSheet, Text, View } from "react-native";
-import { Card, LinkButton, PayflowLogo, PrimaryButton, Screen } from "../components/ui";
+import { Card, LinkButton, SuturaLogo, PrimaryButton, Screen } from "../components/ui";
 import { useApp } from "../context/AppContext";
 import { colors } from "../theme";
 
 export function PendingScreen() {
-  const { session, signOut } = useApp();
+  const { session, signOut, setScreen } = useApp();
 
   return (
     <Screen>
+      <PrimaryButton label="Verify owner identity" onPress={() => setScreen("verification")} />
       <View style={styles.hero}>
-        <PayflowLogo size={48} />
+        <SuturaLogo size={48} />
         <Text style={styles.title}>Application under review</Text>
         <Text style={styles.body}>
-          {session?.businessName ? `${session.businessName} is` : "Your business is"} being reviewed by the Payflow team. You will be able to accept payments once approved.
+          {session?.businessName ? `${session.businessName} is` : "Your business is"} being reviewed by the Sutura team. You will be able to accept payments once approved.
         </Text>
       </View>
 
       <Card>
         <Text style={styles.status}>Status: Pending review</Text>
-        <Text style={styles.hint}>This usually takes 1–2 business days. We may contact you on the phone number you verified.</Text>
+        <Text style={styles.hint}>This usually takes 1â€“2 business days. We may contact you on the phone number you verified.</Text>
       </Card>
 
       <PrimaryButton label="Sign out" onPress={signOut} color={colors.slate700} />

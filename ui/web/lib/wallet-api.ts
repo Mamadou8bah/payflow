@@ -36,6 +36,7 @@ export type TransferResponse = {
 };
 
 export type DepositResponse = {
+  paymentUrl?: string;
   id: number;
   reference: string;
   amount: number;
@@ -54,6 +55,8 @@ export type WithdrawalResponse = {
 };
 
 export type PaymentLinkResponse = {
+  merchantName: string;
+  transactionReference?: string;
   id: number;
   reference: string;
   amount: number;
@@ -116,7 +119,7 @@ export const walletApi = {
     walletId: number;
     amount: number;
     currency: string;
-    paymentMethod?: string;
+    withdrawalMethod?: string;
     phoneNumber?: string;
     description?: string;
     idempotencyKey?: string;
@@ -125,6 +128,12 @@ export const walletApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  getPaymentLink: (reference: string) => apiRequest<PaymentLinkResponse>(`/api/v1/payment-links/ref/${encodeURIComponent(reference)}`),
+
+  payPaymentLink: (reference: string, walletId: number) => apiRequest<PaymentLinkResponse>(`/api/v1/payment-links/ref/${encodeURIComponent(reference)}/pay`, {
+    method: "POST", body: JSON.stringify({ walletId }),
+  }),
 
   listPaymentLinks: () => apiRequest<PaymentLinkResponse[]>("/api/v1/payment-links"),
 

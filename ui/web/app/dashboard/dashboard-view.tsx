@@ -5,7 +5,7 @@ import { getAuthSession, type AppSession } from "../../lib/auth-session";
 import { getDemoSession } from "../../lib/demo-auth";
 import { CustomerAppView } from "../app/customer-app-view";
 import { AdminDashboardView } from "../operations/admin/admin-dashboard-view";
-import { DashboardLoadingSkeleton } from "../components/payflow-loader";
+import { DashboardLoadingSkeleton } from "../components/sutura-loader";
 import { DeveloperDashboardView } from "./developer-dashboard-view";
 import { MerchantDashboardView } from "./merchant-dashboard-view";
 

@@ -293,7 +293,7 @@ export function CombinedAuthPage({ initialMode = "login" }: { initialMode?: "log
             </button>
 
             <p className="text-center text-xs leading-relaxed text-slate-500">
-              Customers and merchants register in the Payflow mobile apps.{" "}
+              Customers and merchants register in the Sutura mobile apps.{" "}
               <Link href="/merchants/register" className="font-bold text-[#123c91]">
                 Merchant app info
               </Link>

@@ -93,7 +93,7 @@ export async function loadMerchantDashboardFromApi(): Promise<MerchantDashboardD
     title: l.description || l.reference,
     amount: formatMoney(l.currency, l.amount),
     status: l.status.toLowerCase(),
-    uses: 0,
+    uses: l.status === "PAID" ? 1 : 0,
   }));
 
   return {

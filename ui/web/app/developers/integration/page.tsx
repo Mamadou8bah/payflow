@@ -4,7 +4,7 @@ export default function IntegrationGuidePage() {
   return (
     <SitePage
       title="Integration guide"
-      description="A practical path for developers accepting payments with Payflow."
+      description="A practical path for developers accepting payments with Sutura."
     >
       <ContentBlock title="1. Create a developer account">
         <p>

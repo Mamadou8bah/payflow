@@ -1,7 +1,7 @@
 export type AgentOperation = "DEPOSIT" | "WITHDRAWAL";
 
 export type AgentQrPayload = {
-  type: "payflow/agent";
+  type: "sutura/agent";
   operation: AgentOperation;
   reference: string;
   walletId: number;
@@ -14,7 +14,7 @@ export type AgentQrPayload = {
 
 export function buildAgentQrPayload(input: Omit<AgentQrPayload, "type" | "createdAt"> & { createdAt?: string }): AgentQrPayload {
   return {
-    type: "payflow/agent",
+    type: "sutura/agent",
     createdAt: input.createdAt ?? new Date().toISOString(),
     operation: input.operation,
     reference: input.reference,

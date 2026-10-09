@@ -81,7 +81,7 @@ const journeySteps = [
   },
   {
     title: "Risk evaluation",
-    text: "Payflow evaluates the transfer before it lands, using thresholds, flags, and 2FA signals.",
+    text: "Sutura evaluates the transfer before it lands, using thresholds, flags, and 2FA signals.",
     note: "Operator facing",
   },
   {
@@ -95,7 +95,7 @@ const whyChooseItems = [
   {
     iconTitle: "Wallet transfers",
     title: "Free wallet-to-wallet transfers for customers.",
-    text: "Customers can send money between Payflow wallets without transfer fees, with clear confirmations, balance visibility, and transaction history.",
+    text: "Customers can send money between Sutura wallets without transfer fees, with clear confirmations, balance visibility, and transaction history.",
   },
   {
     iconTitle: "Merchant collections",
@@ -282,7 +282,7 @@ export default function HomePage() {
               A payments platform built for customers, merchants, and operators.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-600 md:text-xl">
-              Payflow connects customer checkout, merchant payment links, wallets, free wallet-to-wallet transfers, risk, and reconciliation in one platform. It keeps the payment journey simple for users and observable for the teams that run it.
+              Sutura connects customer checkout, merchant payment links, wallets, free wallet-to-wallet transfers, risk, and reconciliation in one platform. It keeps the payment journey simple for users and observable for the teams that run it.
             </p>
 
             <div className="mt-8 flex items-start gap-3 text-slate-700 sm:items-center">
@@ -304,7 +304,7 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_55%,rgba(17,24,39,0.86),rgba(17,24,39,0.18)_34%,transparent_62%)]" />
               <img
                 src="https://res.cloudinary.com/dflsnes44/image/upload/v1780151927/wp_vznega.jpg"
-                alt="Payflow customer and merchant visual"
+                alt="Sutura customer and merchant visual"
                 className="relative z-10 h-full w-full rounded-[1.6rem] rounded-br-[4rem] object-cover object-center sm:rounded-[2.4rem] sm:rounded-br-[8rem]"
               />
               <div className="absolute left-4 top-4 z-20 rounded-full border border-white/60 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600 sm:left-6 sm:top-6 sm:px-4 sm:py-2 sm:text-xs sm:tracking-[0.18em]">
@@ -333,7 +333,7 @@ export default function HomePage() {
 
       <section className="bg-orange-600 py-16 text-slate-900">
         <div className="mx-auto w-[min(1280px,calc(100%-2rem))]">
-          <h2 className="text-center text-3xl font-black sm:text-4xl md:text-5xl">Get the Payflow apps</h2>
+          <h2 className="text-center text-3xl font-black sm:text-4xl md:text-5xl">Get the Sutura apps</h2>
           <p className="mt-4 text-center text-base text-slate-800 sm:text-lg">Start with the Play Store or App Store — or download directly for other platforms.</p>
 
           <div className="mt-10 relative overflow-hidden">
@@ -365,13 +365,13 @@ export default function HomePage() {
           <div className="lg:sticky lg:top-28 lg:h-[calc(100vh-7rem)] lg:py-8">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-orange-600">Why choose us</p>
             <h2 className="mt-5 max-w-3xl text-3xl font-black leading-tight text-slate-950 sm:text-4xl md:text-6xl">
-              What makes Payflow different?
+              What makes Sutura different?
             </h2>
             <p className="mt-6 max-w-2xl text-xl font-black leading-tight text-slate-900 sm:mt-8 sm:text-2xl">
               Built around customers, merchants, and developers.
             </p>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-600 md:text-xl">
-              Payflow gives customers free wallet-to-wallet transfers, gives merchants practical ways to collect, and gives developers the APIs and webhooks to build reliable payment experiences. The platform stays simple on the surface while still giving operators the controls they need behind the scenes.
+              Sutura gives customers free wallet-to-wallet transfers, gives merchants practical ways to collect, and gives developers the APIs and webhooks to build reliable payment experiences. The platform stays simple on the surface while still giving operators the controls they need behind the scenes.
             </p>
             <a href="/login" className="mt-8 inline-flex rounded-full bg-orange-600 px-8 py-3.5 text-base font-bold text-slate-900 sm:mt-9 sm:px-9 sm:py-4">
               Get started
@@ -399,7 +399,7 @@ export default function HomePage() {
           <blockquote>
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-orange-600">Customer and merchant trust</p>
             <p className="mt-4 text-3xl font-black leading-tight text-slate-900 sm:text-4xl md:text-5xl">
-              "Payflow gave our team a single command center for customer payments, merchant links, and risk incidents."
+              "Sutura gave our team a single command center for customer payments, merchant links, and risk incidents."
             </p>
             <footer className="mt-8">
               <p className="text-2xl font-black text-slate-900">Head of Payments</p>
@@ -441,8 +441,8 @@ export default function HomePage() {
           <div className="mx-auto w-[min(1280px,calc(100%-2rem))] px-4 md:px-6">
             <div className="grid gap-6 border-b border-slate-100 pb-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
               <div>
-                <p className="text-sm font-bold uppercase tracking-[0.22em] text-orange-600">Payflow</p>
-                <h2 className="mt-3 text-3xl font-black leading-tight text-slate-900 md:text-4xl">Ready to launch with Payflow?</h2>
+                <p className="text-sm font-bold uppercase tracking-[0.22em] text-orange-600">Sutura</p>
+                <h2 className="mt-3 text-3xl font-black leading-tight text-slate-900 md:text-4xl">Ready to launch with Sutura?</h2>
                 <p className="mt-3 max-w-3xl text-base leading-relaxed text-slate-700 md:text-lg">
                   Build customer payment flows, merchant collection tools, and operator controls with idempotency, risk checks, reconciliation workflows, and webhook notifications.
                 </p>
@@ -495,7 +495,7 @@ export default function HomePage() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 border-t border-slate-100 pt-4 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
-              <p>© 2026 Payflow. All rights reserved.</p>
+              <p>© 2026 Sutura. All rights reserved.</p>
               <div className="flex flex-wrap gap-4">
                 <a href="/legal/privacy" className="text-slate-600 hover:text-orange-600">
                   Privacy

@@ -4,7 +4,7 @@ export default function ContactPage() {
   return (
     <SitePage
       title="Contact sales"
-      description="Talk to Payflow about developer access, merchant onboarding, or operational rollout."
+      description="Talk to Sutura about developer access, merchant onboarding, or operational rollout."
     >
       <ContentBlock title="Who should contact us">
         <ul className="list-disc space-y-2 pl-5">
@@ -17,8 +17,8 @@ export default function ContactPage() {
       <ContentBlock title="How to reach us">
         <p>
           Email{" "}
-          <a href="mailto:sales@payflow.gm" className="font-bold text-[#123c91]">
-            sales@payflow.gm
+          <a href="mailto:sales@sutura.gm" className="font-bold text-[#123c91]">
+            sales@sutura.gm
           </a>{" "}
           with your company name, use case, and whether you need developer, admin, or merchant support.
         </p>

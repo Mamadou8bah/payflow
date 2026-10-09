@@ -4,19 +4,19 @@ export default function TermsOfServicePage() {
   return (
     <SitePage
       title="Terms of service"
-      description="The terms that govern use of Payflow’s websites, developer tools, APIs, and related services."
+      description="The terms that govern use of Sutura’s websites, developer tools, APIs, and related services."
     >
       <ContentBlock title="Agreement">
         <p>
-          By creating a Payflow account or using our APIs, dashboards, or documentation, you agree to these terms. If you
-          use Payflow on behalf of a business, you confirm you are authorized to bind that business.
+          By creating a Sutura account or using our APIs, dashboards, or documentation, you agree to these terms. If you
+          use Sutura on behalf of a business, you confirm you are authorized to bind that business.
         </p>
       </ContentBlock>
 
       <ContentBlock title="Accounts and roles">
         <p>
-          The Payflow web platform is intended for developers and administrators. Customer and merchant registration is
-          handled through Payflow mobile apps. You are responsible for protecting credentials, API keys, and access to
+          The Sutura web platform is intended for developers and administrators. Customer and merchant registration is
+          handled through Sutura mobile apps. You are responsible for protecting credentials, API keys, and access to
           your organization.
         </p>
       </ContentBlock>
@@ -24,7 +24,7 @@ export default function TermsOfServicePage() {
       <ContentBlock title="Acceptable use">
         <ul className="list-disc space-y-2 pl-5">
           <li>Do not attempt unauthorized access to wallets, APIs, or admin tools</li>
-          <li>Do not use Payflow for unlawful, deceptive, or abusive activity</li>
+          <li>Do not use Sutura for unlawful, deceptive, or abusive activity</li>
           <li>Do not interfere with reconciliation, risk controls, or audit logging</li>
           <li>Keep integration traffic within rate limits and published API rules</li>
         </ul>
@@ -32,7 +32,7 @@ export default function TermsOfServicePage() {
 
       <ContentBlock title="Payments and ledger records">
         <p>
-          Payflow records money movement through wallet balances and ledger postings. Transaction outcomes depend on
+          Sutura records money movement through wallet balances and ledger postings. Transaction outcomes depend on
           validation, risk checks, available balance, and operational status. Reversals and adjustments may be applied
           when required for corrections or dispute handling.
         </p>

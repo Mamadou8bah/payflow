@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { Card, PayflowLogo, PrimaryButton, Screen } from "../components/ui";
+import { Card, SuturaLogo, PrimaryButton, Screen } from "../components/ui";
 import { fetchMerchantDashboard } from "../api/dashboard";
 import { useApp } from "../context/AppContext";
 import { colors } from "../theme";
 
 export function HomeScreen() {
-  const { session, signOut } = useApp();
+  const { session, signOut, setScreen } = useApp();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState({ totalBalance: 0, activeLinks: 0, currency: "GMD" });
@@ -25,8 +25,9 @@ export function HomeScreen() {
 
   return (
     <Screen>
+      <PrimaryButton label="Verify owner identity" onPress={() => setScreen("verification")} />
       <View style={styles.header}>
-        <PayflowLogo size={36} />
+        <SuturaLogo size={36} />
         <View>
           <Text style={styles.eyebrow}>Merchant dashboard</Text>
           <Text style={styles.title}>{session?.businessName ?? "Your business"}</Text>

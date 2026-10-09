@@ -4,7 +4,7 @@ export default function StatusPage() {
   return (
     <SitePage
       title="System status"
-      description="Current operating status for Payflow APIs, dashboards, and payment flows."
+      description="Current operating status for Sutura APIs, dashboards, and payment flows."
     >
       <ContentBlock title="Current status">
         <p className="font-bold text-emerald-700">All systems operational</p>

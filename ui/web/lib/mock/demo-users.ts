@@ -12,25 +12,25 @@ export const DEMO_PASSWORD = "demo123";
 
 export const demoUsers: DemoUser[] = [
   {
-    email: "admin@payflow.local",
+    email: "admin@sutura.local",
     password: DEMO_PASSWORD,
     role: "admin",
-    name: "Payflow Admin",
+    name: "Sutura Admin",
   },
   {
-    email: "merchant@payflow.local",
+    email: "merchant@sutura.local",
     password: DEMO_PASSWORD,
     role: "merchant",
     name: "Acme Merchant",
   },
   {
-    email: "developer@payflow.local",
+    email: "developer@sutura.local",
     password: DEMO_PASSWORD,
     role: "developer",
-    name: "Payflow Developer",
+    name: "Sutura Developer",
   },
   {
-    email: "customer@payflow.local",
+    email: "customer@sutura.local",
     password: DEMO_PASSWORD,
     role: "customer",
     name: "Fatou Jallow",

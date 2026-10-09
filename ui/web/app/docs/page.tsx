@@ -21,7 +21,7 @@ export default function DocsPage() {
                 Accept payments with an API key
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-relaxed text-blue-100">
-                Integrate Payflow into your app in three steps: create a key, create a payment from your backend, and confirm with webhooks.
+                Integrate Sutura into your app in three steps: create a key, create a payment from your backend, and confirm with webhooks.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a href="#quickstart" className="rounded-lg bg-white px-5 py-2.5 text-sm font-bold text-[#123c91] transition-colors hover:bg-blue-50">
@@ -50,7 +50,7 @@ export default function DocsPage() {
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-8">
             <SectionHeading
               title="How it works"
-              description="Your server talks to Payflow. Your customer pays on our checkout page. Your server gets notified when money arrives."
+              description="Your server talks to Sutura. Your customer pays on our checkout page. Your server gets notified when money arrives."
             />
             <ol className="grid gap-4 lg:grid-cols-3">
               {quickstartSteps.map((item) => (
@@ -116,7 +116,7 @@ Content-Type: application/json`}
         <section id="webhooks" className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-8 lg:p-10">
           <SectionHeading
             title="Webhooks"
-            description="Register an endpoint in the developer dashboard. Payflow POSTs events when payment status changes."
+            description="Register an endpoint in the developer dashboard. Sutura POSTs events when payment status changes."
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -136,7 +136,7 @@ Content-Type: application/json`}
 
           <div className="mt-6">
             <Callout type="info" title="Best practice">
-              Respond with HTTP 200 quickly, then process the event asynchronously. Payflow retries failed deliveries.
+              Respond with HTTP 200 quickly, then process the event asynchronously. Sutura retries failed deliveries.
             </Callout>
           </div>
         </section>

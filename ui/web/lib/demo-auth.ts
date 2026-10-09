@@ -3,7 +3,7 @@ import { findDemoUser, getDashboardPath, type DemoRole, type DemoUser } from "./
 /** Demo logins are opt-in for local development only. Never enable in production builds. */
 export const DEMO_AUTH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true";
 
-const SESSION_KEY = "payflow_demo_session";
+const SESSION_KEY = "sutura_demo_session";
 
 export type DemoSession = Pick<DemoUser, "email" | "role" | "name">;
 

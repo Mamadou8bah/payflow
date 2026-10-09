@@ -59,7 +59,7 @@ export function AccountScreen() {
 
       <Pressable onPress={() => updateReg({ account: { ...account, acceptedTerms: !account.acceptedTerms } })} style={styles.termsRow}>
         <Text style={styles.checkbox}>{account.acceptedTerms ? "☑" : "☐"}</Text>
-        <Text style={styles.termsText}>I agree to Payflow merchant terms and confirm the information provided is accurate.</Text>
+        <Text style={styles.termsText}>I agree to Sutura merchant terms and confirm the information provided is accurate.</Text>
       </Pressable>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}

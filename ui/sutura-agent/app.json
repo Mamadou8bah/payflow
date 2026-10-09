@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Sutura Agent",
+    "slug": "sutura-agent",
+    "scheme": "suturaagent",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android", "web"],
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "gm.sutura.agent",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "gm.sutura.agent",
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0a0a"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "sutura-agent-app"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-asset",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Sutura Agent to scan customer QR codes."
+        }
+      ]
+    ]
+  }
+}

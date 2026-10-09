@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { merchantRegistrationApi } from "../../api/merchantRegistration";
-import { AppInput, Field, LinkButton, PayflowLogo, PrimaryButton, Screen } from "../../components/ui";
+import { AppInput, Field, LinkButton, SuturaLogo, PrimaryButton, Screen } from "../../components/ui";
 import { StepIndicator } from "../../components/StepIndicator";
 import { formatGambianPhone, toE164Phone } from "../../constants/registration";
 import { useApp } from "../../context/AppContext";
@@ -27,7 +27,7 @@ export function PhoneScreen() {
 
   return (
     <Screen>
-      <PayflowLogo />
+      <SuturaLogo />
       <Text style={styles.title}>Verify your phone</Text>
       <StepIndicator current={1} />
 

@@ -5,7 +5,7 @@ import { useId } from "react";
 export type ChartPoint = { label: string; value: number };
 
 const CHART_COLORS = ["#123c91", "#debb30", "#10b981", "#8b5cf6", "#ef4444", "#0ea5e9"];
-const PAYFLOW_LOGO = "https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/payflow_no_bg_f0l7on.png";
+const SUTURA_LOGO = "https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png";
 
 function ChartFrame({ height, children }: { height: number; children: React.ReactNode }) {
   return (
@@ -231,7 +231,7 @@ export function DashboardHeroCard({
           <p className="mt-2 text-4xl font-black tracking-tight">{value}</p>
           {hint ? <p className="mt-2 text-sm text-blue-200">{hint}</p> : null}
         </div>
-        <img src={PAYFLOW_LOGO} alt="Payflow" className="h-14 w-14 shrink-0 object-contain" />
+        <img src={SUTURA_LOGO} alt="Sutura" className="h-14 w-14 shrink-0 object-contain" />
       </div>
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2 text-sm">
         <span className="font-bold text-white">{footerLeft}</span>

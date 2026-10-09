@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Sutura App",
+    "slug": "sutura-app",
+    "scheme": "suturaapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android", "web"],
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "gm.sutura.customer",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "gm.sutura.customer",
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0a0a"
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "sutura-customer-app"
+      }
+    },
+    "plugins": ["expo-asset", "expo-font", "expo-secure-store"]
+  }
+}

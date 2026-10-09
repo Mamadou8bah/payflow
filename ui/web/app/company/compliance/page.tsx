@@ -4,7 +4,7 @@ export default function CompliancePage() {
   return (
     <SitePage
       title="Compliance"
-      description="Payflow’s approach to accountable money movement, auditability, and operational controls."
+      description="Sutura’s approach to accountable money movement, auditability, and operational controls."
     >
       <ContentBlock title="Ledger accountability">
         <p>
@@ -24,7 +24,7 @@ export default function CompliancePage() {
 
       <ContentBlock title="Ongoing work">
         <p>
-          Compliance requirements evolve with product scope and local operating rules. Payflow continues to strengthen
+          Compliance requirements evolve with product scope and local operating rules. Sutura continues to strengthen
           verification, monitoring, and documentation as the platform expands.
         </p>
       </ContentBlock>

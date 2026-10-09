@@ -1,11 +1,8 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:123c91,100:0a1628&height=180&section=header&text=Payflow&fontSize=54&fontColor=ffffff&fontAlignY=35&desc=Ledger-backed%20digital%20payments&descSize=18&descAlignY=55&animation=fadeIn" width="100%" alt="Payflow header" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:123c91,100:0a1628&height=180&section=header&text=Sutura&fontSize=54&fontColor=ffffff&fontAlignY=35&desc=Ledger-backed%20digital%20payments&descSize=18&descAlignY=55&animation=fadeIn" width="100%" alt="Sutura header" />
 
-<br />
-
-
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1200&color=123C91&center=true&vCenter=true&width=720&lines=Double-entry+ledger+wallets;Customer+%C2%B7+Merchant+%C2%B7+Agent+%C2%B7+Admin;Idempotent+transfers+%26+cash+operations;Sentinel+KYC+%2B+fraud+(coming+soon)" alt="Payflow typing banner" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1200&color=123C91&center=true&vCenter=true&width=720&lines=Double-entry+ledger+wallets;Customer+%C2%B7+Merchant+%C2%B7+Agent+%C2%B7+Admin;Idempotent+transfers+%26+cash+operations;Sentinel+KYC+%2B+fraud+(coming+soon)" alt="Sutura typing banner" />
 
 <br />
 
@@ -15,11 +12,11 @@
 
 ---
 
-Payflow is a digital payments platform built around a double-entry ledger. It supports customer wallets, merchant collections, agent-assisted cash deposit and withdrawal, admin operations, and developer integrations.
+Sutura is a digital payments platform built around a double-entry ledger. It supports customer wallets, merchant collections, agent-assisted cash deposit and withdrawal, admin operations, and developer integrations.
 
 The balance a user sees in an app is not a field that gets incremented and decremented in isolation. Every wallet is linked to a ledger account. Every movement of money is recorded as balanced debit and credit postings under a unique trace. The displayed balance is computed from those postings.
 
-Identity verification (KYC) and fraud detection will be handled by a separate system called **Sentinel**. That integration is planned and is not part of this repository yet.
+Identity verification (KYC) and fraud scoring are handled through the separate **Sentinel** API. Hosted onboarding, transfer review and signed callbacks are implemented. The remaining validation and model requirements are tracked in [docs/readiness.md](docs/readiness.md).
 
 <div align="center">
 <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%" alt="" />
@@ -28,7 +25,7 @@ Identity verification (KYC) and fraud detection will be handled by a separate sy
 ## Table of contents
 
 1. [Background](#background)
-2. [What Payflow covers](#what-payflow-covers)
+2. [What Sutura covers](#what-sutura-covers)
 3. [Roles and products](#roles-and-products)
 4. [High-level architecture](#high-level-architecture)
 5. [The ledger](#the-ledger)
@@ -60,13 +57,13 @@ Many wallet products store a single number per account and update it on every tr
 - questions like “where did this money come from?”
 - differences between what the app shows and what the books should show
 
-Payflow is built so the **ledger is the source of truth**. Application transactions (deposits, withdrawals, transfers) reference ledger traces. Reconciliation jobs compare wallet/transaction history against ledger balances and record mismatches when they diverge.
+Sutura is built so the **ledger is the source of truth**. Application transactions (deposits, withdrawals, transfers) reference ledger traces. Reconciliation jobs compare wallet/transaction history against ledger balances and record mismatches when they diverge.
 
 The product also has to match how money moves outside pure app-to-app transfers. People still cash in and cash out through agents. Merchants need collection tools. Admins need freeze, reverse, and audit capabilities. Developers need stable APIs and API keys.
 
 ---
 
-## What Payflow covers
+## What Sutura covers
 
 | Area | Capability |
 |---|---|
@@ -87,7 +84,7 @@ The product also has to match how money moves outside pure app-to-app transfers.
 
 ## Roles and products
 
-Payflow is multi-sided. Each role gets a different surface, but they all talk to the same core API and the same ledger.
+Sutura is multi-sided. Each role gets a different surface, but they all talk to the same core API and the same ledger.
 
 | Role | Product | Typical actions |
 |---|---|---|
@@ -99,7 +96,7 @@ Payflow is multi-sided. Each role gets a different surface, but they all talk to
 
 ```mermaid
 flowchart LR
-  C[Customer] --> API[Payflow API]
+  C[Customer] --> API[Sutura API]
   M[Merchant] --> API
   A[Agent] --> API
   D[Admin] --> API
@@ -124,7 +121,7 @@ flowchart TB
     WEB[Web Dashboards<br/>Next.js]
   end
 
-  subgraph Core["Payflow Core · Spring Boot"]
+  subgraph Core["Sutura Core · Spring Boot"]
     AUTH[Auth / JWT / API Keys]
     MONEY[Wallets · Transfers · Deposits · Withdrawals]
     OPS[Agent · Admin · Audit · Webhooks]
@@ -158,7 +155,7 @@ The core API is the only place money is posted to the ledger. Mobile and web cli
 A balance column answers “how much do we think this user has right now?”  
 A ledger answers “what events produced that number, and can we prove the books still balance?”
 
-In Payflow:
+In Sutura:
 
 1. Creating a wallet also creates a linked **ledger account**.
 2. Wallet ledger accounts are **liabilities**. The platform owes that amount to the wallet owner.
@@ -171,7 +168,7 @@ In Payflow:
 
 | Type | Example | Balance meaning |
 |---|---|---|
-| **LIABILITY** | User / merchant wallet | What Payflow owes the holder |
+| **LIABILITY** | User / merchant wallet | What Sutura owes the holder |
 | **ASSET** | Platform cash clearing | Cash / claims held by the platform |
 
 ### Posting examples
@@ -208,7 +205,7 @@ Net change across the books:           0
 ```mermaid
 sequenceDiagram
   participant U as Caller
-  participant API as Payflow API
+  participant API as Sutura API
   participant L as Ledger
   participant DB as PostgreSQL
 
@@ -240,11 +237,11 @@ Reconciliation jobs compare:
 - balances derived from the ledger, and
 - balances implied by recorded wallet / transaction history
 
-When they disagree, Payflow stores a **mismatch** against a reconciliation report. That is intentional: drift should be visible to ops, not silently “fixed” by overwriting a number.
+When they disagree, Sutura stores a **mismatch** against a reconciliation report. That is intentional: drift should be visible to ops, not silently “fixed” by overwriting a number.
 
 ### Transactions vs ledger
 
-Payflow keeps both:
+Sutura keeps both:
 
 - **Transaction records** — product-level history (type, status, reference, parties, amounts)
 - **Ledger postings** — accounting-level truth tied by trace / reference
@@ -339,7 +336,7 @@ sequenceDiagram
   participant C as Customer
   participant Q as QR / Reference
   participant A as Agent App
-  participant API as Payflow API
+  participant API as Sutura API
   participant L as Ledger
 
   C->>Q: Start deposit / withdrawal
@@ -418,7 +415,7 @@ Production profile defaults include Swagger disabled and JPA `ddl-auto=validate`
 | **PostgreSQL** | Users, wallets, ledger accounts/postings, transactions, deposits, withdrawals, payment links, audit, reconciliation |
 | **Redis** | Distributed rate limiting and caching needs |
 
-Docker Compose production stack runs Postgres, Redis, and the Payflow API together. See `server/docker-compose.prod.yml` and `server/DEPLOYMENT.md`.
+Docker Compose production stack runs Postgres, Redis, and the Sutura API together. See `server/docker-compose.prod.yml` and `server/DEPLOYMENT.md`.
 
 Health is exposed via Spring Actuator (health endpoint for orchestration).
 
@@ -426,24 +423,24 @@ Health is exposed via Spring Actuator (health endpoint for orchestration).
 
 ## KYC and fraud — Sentinel
 
-Payflow currently includes wallet limits, risk flags, and admin controls. Full **KYC** and **fraud decisioning** are intentionally deferred.
+Sutura currently includes wallet limits, risk flags, and admin controls. Full **KYC** and **fraud decisioning** are intentionally deferred.
 
 **Sentinel** is the planned service for:
 
 - identity / KYC verification during onboarding and limit upgrades
 - fraud detection and allow / review / block decisions on money movement
 
-When Sentinel is ready, Payflow will call into it at the appropriate points in registration and payment flows. Until then, do not treat this repository as a complete compliance or fraud stack.
+When Sentinel is ready, Sutura will call into it at the appropriate points in registration and payment flows. Until then, do not treat this repository as a complete compliance or fraud stack.
 
 ---
 
 ## Repository layout
 
 ```text
-payflow-server/
+sutura-server/
 ├── server/
-│   ├── payflow/                  # Spring Boot application
-│   │   └── src/main/java/com/mamadou/payflow/
+│   ├── sutura/                  # Spring Boot application
+│   │   └── src/main/java/com/mamadou/sutura/
 │   │       ├── auth/             # Login, JWT, API keys
 │   │       ├── wallet/           # Wallets, limits, balances
 │   │       ├── ledger/           # Accounts, postings, balance computation
@@ -466,8 +463,8 @@ payflow-server/
 │   ├── DEPLOYMENT.md
 │   └── README.md                 # Detailed server docs
 ├── ui/
-│   ├── payflow-app/              # Customer Expo app
-│   ├── payflow-agent/            # Agent Expo app
+│   ├── sutura-app/              # Customer Expo app
+│   ├── sutura-agent/            # Agent Expo app
 │   ├── merchant-app/             # Merchant Expo app
 │   └── web/                      # Next.js site + dashboards
 └── README.md                     # This file
@@ -504,8 +501,8 @@ For request/response shapes and deeper endpoint notes, see [`server/README.md`](
 
 | App | Path | Purpose |
 |---|---|---|
-| Customer | `ui/payflow-app` | Balances, send, deposit, withdraw, activity |
-| Agent | `ui/payflow-agent` | QR scan and cash operation completion |
+| Customer | `ui/sutura-app` | Balances, send, deposit, withdraw, activity |
+| Agent | `ui/sutura-agent` | QR scan and cash operation completion |
 | Merchant | `ui/merchant-app` | Registration and collections home |
 | Web | `ui/web` | Landing + admin / merchant / developer / customer dashboards |
 
@@ -558,7 +555,7 @@ npm run dev
 ### 3. Start a mobile app
 
 ```bash
-cd ui/payflow-app   # or ui/payflow-agent / ui/merchant-app
+cd ui/sutura-app   # or ui/sutura-agent / ui/merchant-app
 cp .env.example .env
 # EXPO_PUBLIC_API_BASE_URL=http://localhost:5000
 

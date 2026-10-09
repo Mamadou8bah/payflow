@@ -4,7 +4,7 @@ export default function ReleaseNotesPage() {
   return (
     <SitePage
       title="Release notes"
-      description="Product and platform updates for the Payflow web experience and APIs."
+      description="Product and platform updates for the Sutura web experience and APIs."
     >
       <ContentBlock title="August 2026">
         <ul className="list-disc space-y-2 pl-5">

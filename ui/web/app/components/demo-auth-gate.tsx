@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { getAuthSession, type AppSession } from "../../lib/auth-session";
 import { getDemoSession } from "../../lib/demo-auth";
 import type { DemoRole } from "../../lib/mock/demo-users";
-import { PayflowLoader } from "./payflow-loader";
+import { SuturaLoader } from "./sutura-loader";
 
 export type SessionInfo = AppSession | { email: string; role: DemoRole; name: string; source: "demo" };
 
 export function getActiveSession(): SessionInfo | null {
-  return getAuthSession() ?? getDemoSession();
+  const authenticated = getAuthSession();
+  if (authenticated) return authenticated;
+  const demo = getDemoSession();
+  return demo ? { ...demo, source: "demo" } : null;
 }
 
 export function DemoAuthGate({
@@ -47,7 +50,7 @@ export function DemoAuthGate({
 
   if (status === "redirecting") {
     return (
-      <PayflowLoader
+      <SuturaLoader
         message="Redirecting"
         submessage={role ? "Taking you to the right place…" : "Taking you to sign in…"}
       />
@@ -55,7 +58,7 @@ export function DemoAuthGate({
   }
 
   return (
-    <PayflowLoader
+    <SuturaLoader
       message="Checking your session"
       submessage="Securing your dashboard…"
     />

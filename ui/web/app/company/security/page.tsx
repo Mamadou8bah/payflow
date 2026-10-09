@@ -4,7 +4,7 @@ export default function SecurityPage() {
   return (
     <SitePage
       title="Security"
-      description="How Payflow protects accounts, APIs, wallets, and operational access."
+      description="How Sutura protects accounts, APIs, wallets, and operational access."
     >
       <ContentBlock title="Access controls">
         <p>

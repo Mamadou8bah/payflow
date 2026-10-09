@@ -4,11 +4,11 @@ export default function CookiePolicyPage() {
   return (
     <SitePage
       title="Cookie policy"
-      description="How Payflow uses cookies and similar technologies on the web."
+      description="How Sutura uses cookies and similar technologies on the web."
     >
       <ContentBlock title="What we use">
         <p>
-          Payflow uses essential cookies and local storage to keep sessions signed in, remember preferences, and protect
+          Sutura uses essential cookies and local storage to keep sessions signed in, remember preferences, and protect
           forms. We may use limited analytics to understand how documentation and marketing pages are used.
         </p>
       </ContentBlock>

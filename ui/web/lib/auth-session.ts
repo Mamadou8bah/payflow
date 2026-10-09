@@ -1,6 +1,6 @@
 import type { DemoRole } from "./mock/demo-users";
 
-const AUTH_SESSION_KEY = "payflow_auth_session";
+const AUTH_SESSION_KEY = "sutura_auth_session";
 
 export type AppRole = DemoRole;
 

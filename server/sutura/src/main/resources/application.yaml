@@ -1,0 +1,161 @@
+spring:
+  application:
+    name: sutura
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/sutura}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    # Local default only — production profile requires SPRING_DATASOURCE_PASSWORD.
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+  docker:
+    compose:
+      enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_DDL_AUTO:update}
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DATABASE:0}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000  # 10 minutes in milliseconds
+
+  # OpenAPI / Swagger Configuration
+  openapi:
+    version: v1.0.0
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: ${SPRINGDOC_ENABLED:true}
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: ${SPRINGDOC_ENABLED:true}
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    doc-expansion: list
+    show-extensions: true
+    show-common-extensions: true
+  paths-to-match: /api/**
+  packages-to-scan: com.mamadou.sutura
+  cache:
+    disabled: false
+
+server:
+  port: ${SERVER_PORT:5000}
+
+jwt:
+  # Local default only — production profile requires JWT_SECRET (Base64, ≥32 bytes).
+  secret: ${JWT_SECRET:ZGV2ZWxvcG1lbnQtc2VjcmV0LWtleS1mb3ItcGF5Zmxvdy1hcHAtMzItYnl0ZXM=}
+  access-token-expiration-minutes: ${JWT_ACCESS_TOKEN_EXPIRATION_MINUTES:15}
+  refresh-token-expiration-days: ${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:7}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: when-authorized
+    metrics:
+      enabled: true
+  metrics:
+    enable:
+      jvm: true
+      process: true
+      system: true
+      tomcat: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        auth.login.duration: true
+        transfer.execution.duration: true
+        risk.evaluation.duration: true
+        ledger.posting.duration: true
+        webhook.processing.duration: true
+
+logging:
+  level:
+    root: INFO
+    com.mamadou.sutura: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{correlationId}] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{correlationId}] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/sutura.log
+    max-size: 10MB
+    max-history: 10
+
+sutura:
+  notifications:
+    sms:
+      provider: ${SUTURA_SMS_PROVIDER:noop}
+      twilio:
+        account-sid: ${TWILIO_ACCOUNT_SID:}
+        auth-token: ${TWILIO_AUTH_TOKEN:}
+        from-number: ${TWILIO_FROM_NUMBER:}
+    email:
+      provider: ${SUTURA_EMAIL_PROVIDER:noop}
+      api-key: ${SUTURA_EMAIL_API_KEY:}
+      from: ${SUTURA_EMAIL_FROM:no-reply@sutura.local}
+
+  webhooks:
+    modempay:
+      signing-secret: ${MODEMPAY_WEBHOOK_SIGNING_SECRET:}
+      signature-header: ${MODEMPAY_WEBHOOK_SIGNATURE_HEADER:x-modem-signature}
+      api-key: ${MODEMPAY_API_KEY:}
+      public-key: ${MODEMPAY_PUBLIC_KEY:}
+      api-url: ${MODEMPAY_API_URL:https://api.modempay.com}
+
+  ratelimit:
+    login:
+      requests: 10
+      window-seconds: 60
+    refresh:
+      requests: 20
+      window-seconds: 60
+    api-key:
+      requests: 1000
+      window-seconds: 3600
+    default:
+      requests: 100
+      window-seconds: 60
+
+  risk:
+    critical-threshold: ${SUTURA_RISK_CRITICAL_THRESHOLD:9.0}
+    high-threshold: ${SUTURA_RISK_HIGH_THRESHOLD:7.0}
+    medium-threshold: ${SUTURA_RISK_MEDIUM_THRESHOLD:5.0}
+    block-critical: ${SUTURA_RISK_BLOCK_CRITICAL:true}
+    block-high: ${SUTURA_RISK_BLOCK_HIGH:false}
+    daily-threshold: ${SUTURA_RISK_DAILY_THRESHOLD:50000}
+    daily-transaction-count: ${SUTURA_RISK_DAILY_TRANSACTION_COUNT:20}
+    rapid-transfer-window-seconds: ${SUTURA_RISK_RAPID_TRANSFER_WINDOW_SECONDS:300}
+    rapid-transfer-count: ${SUTURA_RISK_RAPID_TRANSFER_COUNT:5}
+    new-wallet-age-days: ${SUTURA_RISK_NEW_WALLET_AGE_DAYS:7}
+    new-wallet-high-value-threshold: ${SUTURA_RISK_NEW_WALLET_HIGH_VALUE_THRESHOLD:10000}
+
+  fraud-detection:
+    enabled: ${SUTURA_FRAUD_ENABLED:true}
+    base-url: ${SUTURA_SENTINEL_BASE_URL:http://localhost:8080}
+    timeout-ms: ${SUTURA_FRAUD_TIMEOUT_MS:2000}
+    default-country: ${SUTURA_FRAUD_DEFAULT_COUNTRY:GM}
+    default-channel: ${SUTURA_FRAUD_DEFAULT_CHANNEL:api}
+    api-key: ${SUTURA_SENTINEL_API_KEY:}
+
+  sentinel-webhook:
+    signing-secret: ${SUTURA_SENTINEL_WEBHOOK_SECRET:}
+    tenant-code: ${SUTURA_SENTINEL_TENANT_CODE:}

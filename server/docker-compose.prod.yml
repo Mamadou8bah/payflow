@@ -3,25 +3,25 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: payflow-postgres
+    container_name: sutura-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-payflow}
+      POSTGRES_DB: ${POSTGRES_DB:-sutura}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-payflow}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sutura}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - payflow-network
+      - sutura-network
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    container_name: payflow-redis
+    container_name: sutura-redis
     command: >
       redis-server
       --appendonly yes
@@ -34,17 +34,17 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - payflow-network
+      - sutura-network
     restart: unless-stopped
 
-  payflow-app:
+  sutura-app:
     build:
-      context: ./payflow
+      context: ./sutura
       dockerfile: Dockerfile
-    container_name: payflow-app
+    container_name: sutura-app
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-payflow}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sutura}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_JPA_DDL_AUTO: ${SPRING_JPA_DDL_AUTO:-validate}
@@ -55,22 +55,21 @@ services:
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
       TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
-      PAYFLOW_EMAIL_API_KEY: ${PAYFLOW_EMAIL_API_KEY:-}
+      SUTURA_EMAIL_API_KEY: ${SUTURA_EMAIL_API_KEY:-}
       MODEMPAY_WEBHOOK_SIGNING_SECRET: ${MODEMPAY_WEBHOOK_SIGNING_SECRET:?MODEMPAY_WEBHOOK_SIGNING_SECRET is required}
       MODEMPAY_API_KEY: ${MODEMPAY_API_KEY:?MODEMPAY_API_KEY is required}
       MODEMPAY_PUBLIC_KEY: ${MODEMPAY_PUBLIC_KEY:-}
       MODEMPAY_API_URL: ${MODEMPAY_API_URL:-https://api.modempay.com}
-      PAYFLOW_FRAUD_BASE_URL: http://fraud-api:8001
-      PAYFLOW_FRAUD_API_KEY: ${PAYFLOW_FRAUD_API_KEY:?PAYFLOW_FRAUD_API_KEY is required}
-      PAYFLOW_FRAUD_FAIL_OPEN: ${PAYFLOW_FRAUD_FAIL_OPEN:-false}
+      SUTURA_SENTINEL_WEBHOOK_SECRET: ${SUTURA_SENTINEL_WEBHOOK_SECRET:?SUTURA_SENTINEL_WEBHOOK_SECRET is required}
+      SUTURA_SENTINEL_TENANT_CODE: ${SUTURA_SENTINEL_TENANT_CODE:?SUTURA_SENTINEL_TENANT_CODE is required}
+      SUTURA_SENTINEL_BASE_URL: ${SUTURA_SENTINEL_BASE_URL:?SUTURA_SENTINEL_BASE_URL is required}
+      SUTURA_SENTINEL_API_KEY: ${SUTURA_SENTINEL_API_KEY:?SUTURA_SENTINEL_API_KEY is required}
     ports:
       - "5000:5000"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      fraud-api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/actuator/health"]
@@ -79,7 +78,7 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - payflow-network
+      - sutura-network
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -87,42 +86,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  fraud-api:
-    build:
-      context: "../fraud detection system"
-      dockerfile: Dockerfile
-    container_name: payflow-fraud-api
-    environment:
-      FRAUD_REDIS_HOST: redis
-      FRAUD_REDIS_PORT: 6379
-      FRAUD_REDIS_DB: 1
-      FRAUD_REDIS_PASSWORD: ${REDIS_PASSWORD}
-      FRAUD_API_PORT: 8001
-      FRAUD_API_KEY: ${PAYFLOW_FRAUD_API_KEY}
-      FRAUD_REQUIRE_API_KEY: "true"
-      FRAUD_ALLOW_AUTO_TRAIN: "false"
-      FRAUD_POSTGRES_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-payflow}
-      FRAUD_PERSIST_SCORES: "true"
-      FRAUD_INCLUDE_FEATURES: "false"
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 90s
-    networks:
-      - payflow-network
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
 volumes:
   postgres_data:
@@ -131,5 +94,5 @@ volumes:
     driver: local
 
 networks:
-  payflow-network:
+  sutura-network:
     driver: bridge

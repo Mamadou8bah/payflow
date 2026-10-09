@@ -135,11 +135,11 @@ export function DashboardShell({
         <div className="mx-auto flex h-14 w-[min(1440px,calc(100%-1rem))] items-center gap-3 px-2 sm:h-16 sm:px-3 lg:px-5">
           <a href="/" className="flex shrink-0 items-center gap-2">
             <img
-              src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/payflow_no_bg_f0l7on.png"
-              alt="Payflow"
+              src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+              alt="Sutura"
               className="h-8 w-8 object-contain"
             />
-            <span className="text-base font-black tracking-tight text-[#123c91]">Payflow</span>
+            <span className="text-base font-black tracking-tight text-[#123c91]">Sutura</span>
           </a>
 
           <nav className="mx-auto hidden min-w-0 max-w-full items-center gap-1 overflow-x-auto rounded-full bg-slate-100 p-1 md:flex [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

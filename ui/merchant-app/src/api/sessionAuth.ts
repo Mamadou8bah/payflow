@@ -15,7 +15,14 @@ let handlers: SessionHandlers<TokenSession> | null = null;
 let refreshInFlight: Promise<string | null> | null = null;
 
 export function bindTokenSession<T extends TokenSession>(next: SessionHandlers<T>) {
-  handlers = next as SessionHandlers<TokenSession>;
+  handlers = {
+    getSession: next.getSession,
+    updateSession: async (tokens) => {
+      const current = next.getSession();
+      if (current) await next.updateSession({ ...current, ...tokens });
+    },
+    clearSession: next.clearSession,
+  };
 }
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -73,13 +80,13 @@ export async function authFetch(path: string, init?: RequestInit): Promise<Respo
   const newToken = await refreshAccessToken();
   if (!newToken) {
     await handlers?.clearSession();
-    throw new Error("Session expired — please sign in again");
+    throw new Error("Session expired â€” please sign in again");
   }
 
   response = await withAuth(newToken);
   if (response.status === 401) {
     await handlers?.clearSession();
-    throw new Error("Session expired — please sign in again");
+    throw new Error("Session expired â€” please sign in again");
   }
   return response;
 }

@@ -4,7 +4,7 @@ export default function MerchantWebhooksPage() {
   return (
     <SitePage
       title="Webhook updates"
-      description="How Payflow notifies your systems when payment and collection statuses change."
+      description="How Sutura notifies your systems when payment and collection statuses change."
     >
       <ContentBlock title="Why webhooks matter">
         <p>

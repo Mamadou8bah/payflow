@@ -46,7 +46,7 @@ export const footerColumns: Array<{
   {
     title: "Company",
     links: [
-      { label: "About Payflow", href: "/company/about" },
+      { label: "About Sutura", href: "/company/about" },
       { label: "Security", href: "/company/security" },
       { label: "Compliance", href: "/company/compliance" },
       { label: "Contact sales", href: "/contact" },

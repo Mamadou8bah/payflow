@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { AppInput, Field, LinkButton, PayflowLogo, PrimaryButton, Screen } from "../components/ui";
+import { AppInput, Field, LinkButton, SuturaLogo, PrimaryButton, Screen } from "../components/ui";
 import { useApp } from "../context/AppContext";
 import { colors } from "../theme";
 
@@ -24,7 +24,7 @@ export function LoginScreen() {
 
   return (
     <Screen>
-      <PayflowLogo />
+      <SuturaLogo />
       <Text style={styles.title}>Welcome back</Text>
       <Text style={styles.sub}>Sign in to your merchant account</Text>
 

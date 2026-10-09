@@ -122,7 +122,7 @@ export function DeveloperDashboardView() {
         <div className="space-y-5">
           <PanelCard title="Accept payments in your app" subtitle="Three steps to go live">
             <p className="mb-5 max-w-2xl text-sm leading-relaxed text-slate-600">
-              Payflow lets developers collect payments by creating checkout links from their backend. Your app stays in control — we handle the payment flow and notify you when money arrives.
+              Sutura lets developers collect payments by creating checkout links from their backend. Your app stays in control — we handle the payment flow and notify you when money arrives.
             </p>
             <IntegrationSteps />
             <div className="mt-6 flex flex-wrap gap-3">
@@ -152,7 +152,7 @@ export function DeveloperDashboardView() {
           <DataTable
             title="Recent payments"
             subtitle="Payments created via your API keys"
-            exportFilename="payflow-developer-payments"
+            exportFilename="sutura-developer-payments"
             dateKey="time"
             pageSize={5}
             rows={data.payments as unknown as Record<string, unknown>[]}
@@ -173,7 +173,7 @@ export function DeveloperDashboardView() {
           <DataTable
             title="API keys"
             subtitle="Authenticate your server-side requests"
-            exportFilename="payflow-api-keys"
+            exportFilename="sutura-api-keys"
             searchPlaceholder="Search keys…"
             rows={data.apiKeys as unknown as Record<string, unknown>[]}
             columns={[
@@ -225,7 +225,7 @@ Content-Type: application/json`}</pre>
         <DataTable
           title="Payments"
           subtitle="All payments accepted through your integration"
-          exportFilename="payflow-developer-payments"
+          exportFilename="sutura-developer-payments"
           searchPlaceholder="Search by customer, reference, status…"
           dateKey="time"
           rows={data.payments as unknown as Record<string, unknown>[]}
@@ -250,7 +250,7 @@ Content-Type: application/json`}</pre>
             <PanelCard title="Webhook endpoint" subtitle="We'll POST payment events to this URL">
               <form className="space-y-3" onSubmit={handleSaveWebhook}>
                 <Field label="Endpoint URL">
-                  <input className={inputClass} value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} placeholder="https://your-app.com/webhooks/payflow" required />
+                  <input className={inputClass} value={webhookUrl} onChange={(e) => setWebhookUrl(e.target.value)} placeholder="https://your-app.com/webhooks/sutura" required />
                 </Field>
                 <PrimaryButton type="submit">Save endpoint</PrimaryButton>
               </form>
@@ -267,7 +267,7 @@ Content-Type: application/json`}</pre>
           <DataTable
             title="Recent deliveries"
             subtitle="Webhook delivery log"
-            exportFilename="payflow-webhook-events"
+            exportFilename="sutura-webhook-events"
             dateKey="time"
             pageSize={8}
             rows={data.webhookEvents as unknown as Record<string, unknown>[]}

@@ -80,7 +80,7 @@ export function MerchantDashboardView() {
         walletId: primaryWallet.id,
         amount: Number(depositForm.amount),
         currency: primaryWallet.currency,
-        paymentMethod: "AGENT",
+        paymentMethod: undefined,
         description: "Merchant deposit",
       })
         .then((deposit) => {
@@ -136,7 +136,7 @@ export function MerchantDashboardView() {
         walletId: primaryWallet.id,
         amount: Number(withdrawalForm.amount),
         currency: primaryWallet.currency,
-        paymentMethod: "AGENT",
+        withdrawalMethod: undefined,
         description: "Merchant withdrawal",
       })
         .then((withdrawal) => {
@@ -277,10 +277,11 @@ export function MerchantDashboardView() {
 
   return (
     <DashboardShell tabs={merchantTabs} activeTab={tab} onTabChange={(id) => setTab(id as Tab)} message={message}>
+      {liveApi && <a href="/app/verification" className="mb-5 inline-block text-sm font-bold text-[#123c91] underline">Verify owner identity</a>}
       {isPendingReview ? (
         <div className="mb-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-950">
           <p className="font-bold">Application under review</p>
-          <p className="mt-1">Collections are disabled until Payflow approves your Gambian merchant account. <a href="/merchants/pending" className="font-bold underline">View status</a></p>
+          <p className="mt-1">Collections are disabled until Sutura approves your Gambian merchant account. <a href="/merchants/pending" className="font-bold underline">View status</a></p>
         </div>
       ) : null}
       {tab === "overview" && (
@@ -292,7 +293,7 @@ export function MerchantDashboardView() {
             dateRange={chartRange}
             onDateRangeChange={setChartRange}
             onDownload={() =>
-              downloadCsv("payflow-merchant-overview", ["Metric", "Value"], data.stats.map((s) => [s.label, s.value]))
+              downloadCsv("sutura-merchant-overview", ["Metric", "Value"], data.stats.map((s) => [s.label, s.value]))
             }
             onRefresh={() => (liveApi ? void refreshFromApi() : notify("success", "Dashboard refreshed"))}
           />
@@ -363,7 +364,7 @@ export function MerchantDashboardView() {
           <DataTable
             title="Your wallets"
             subtitle="Your collection wallets"
-            exportFilename="payflow-merchant-wallets"
+            exportFilename="sutura-merchant-wallets"
             searchPlaceholder="Search wallets by name, ID, status…"
             rows={data.wallets as unknown as Record<string, unknown>[]}
             columns={[
@@ -412,7 +413,7 @@ export function MerchantDashboardView() {
           ) : null}
 
           <div className="grid gap-5 xl:grid-cols-2">
-            <PanelCard title="Create deposit" subtitle="Agent-assisted · show QR at a Payflow agent">
+            <PanelCard title="Create deposit" subtitle="Agent-assisted · show QR at a Sutura agent">
               <form className="space-y-3" onSubmit={handleCreateDeposit}>
                 <Field label="Amount">
                   <input
@@ -433,13 +434,13 @@ export function MerchantDashboardView() {
                   <AgentQrPreview
                     payload={depositQr}
                     title="Deposit QR code"
-                    hint="Take cash to a Payflow agent and show this code"
+                    hint="Take cash to a Sutura agent and show this code"
                   />
                 </div>
               ) : null}
             </PanelCard>
 
-            <PanelCard title="Create withdrawal" subtitle="Agent-assisted · collect cash at a Payflow agent">
+            <PanelCard title="Create withdrawal" subtitle="Agent-assisted · collect cash at a Sutura agent">
               <form className="space-y-3" onSubmit={handleCreateWithdrawal}>
                 <Field label="Amount">
                   <input
@@ -460,7 +461,7 @@ export function MerchantDashboardView() {
                   <AgentQrPreview
                     payload={withdrawalQr}
                     title="Withdrawal QR code"
-                    hint="Show this at a Payflow agent to receive your cash"
+                    hint="Show this at a Sutura agent to receive your cash"
                   />
                 </div>
               ) : null}
@@ -481,7 +482,7 @@ export function MerchantDashboardView() {
             <DataTable
               title="Deposits"
               subtitle="Agent scan required to complete"
-              exportFilename="payflow-merchant-deposits"
+              exportFilename="sutura-merchant-deposits"
               dateKey="time"
               pageSize={5}
               rows={data.deposits as unknown as Record<string, unknown>[]}
@@ -495,7 +496,7 @@ export function MerchantDashboardView() {
             <DataTable
               title="Withdrawals"
               subtitle="Agent scan required to complete"
-              exportFilename="payflow-merchant-withdrawals"
+              exportFilename="sutura-merchant-withdrawals"
               dateKey="time"
               pageSize={5}
               rows={data.withdrawals as unknown as Record<string, unknown>[]}
@@ -508,7 +509,7 @@ export function MerchantDashboardView() {
             />            <DataTable
               title="Transfers"
               subtitle="Between your wallets"
-              exportFilename="payflow-merchant-transfers"
+              exportFilename="sutura-merchant-transfers"
               dateKey="time"
               pageSize={5}
               rows={data.transfers as unknown as Record<string, unknown>[]}
@@ -527,7 +528,7 @@ export function MerchantDashboardView() {
         <DataTable
           title="Payments"
           subtitle="Customer collections"
-          exportFilename="payflow-merchant-payments"
+          exportFilename="sutura-merchant-payments"
           searchPlaceholder="Search by customer, payment ID, status…"
           dateKey="time"
           rows={data.recentPayments as unknown as Record<string, unknown>[]}
@@ -546,11 +547,11 @@ export function MerchantDashboardView() {
           <DataTable
             title="Payment links"
             subtitle="Active checkout links"
-            exportFilename="payflow-merchant-payment-links"
+            exportFilename="sutura-merchant-payment-links"
             searchPlaceholder="Search links by title, ID, status…"
             rows={data.paymentLinks as unknown as Record<string, unknown>[]}
             columns={[
-              { key: "id", label: "Link", render: (r) => <span className="font-semibold text-[#123c91]">{String(r.id)}</span> },
+              { key: "id", label: "Link", render: (r) => liveApi ? <a className="font-semibold text-[#123c91] underline" href={`/pay/${encodeURIComponent(String(r.id))}`}>{String(r.id)}</a> : <span>{String(r.id)}</span> },
               { key: "title", label: "Title" },
               { key: "amount", label: "Amount" },
               { key: "uses", label: "Uses" },
@@ -572,7 +573,7 @@ export function MerchantDashboardView() {
           <DataTable
             title="Subscriptions"
             subtitle="Recurring customer billing"
-            exportFilename="payflow-merchant-subscriptions"
+            exportFilename="sutura-merchant-subscriptions"
             searchPlaceholder="Search by plan, customer, status…"
             rows={data.subscriptions as unknown as Record<string, unknown>[]}
             columns={[
@@ -599,7 +600,7 @@ export function MerchantDashboardView() {
         <DataTable
           title="Webhook deliveries"
           subtitle="Payment status callbacks"
-          exportFilename="payflow-merchant-webhooks"
+          exportFilename="sutura-merchant-webhooks"
           dateKey="time"
           searchPlaceholder="Search by event, ID, status…"
           rows={data.webhooks as unknown as Record<string, unknown>[]}

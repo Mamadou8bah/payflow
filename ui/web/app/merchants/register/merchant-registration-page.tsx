@@ -6,7 +6,7 @@ export default function MerchantRegisterPage() {
     <AuthShell heading="Merchant registration">
       <div className="mt-6 space-y-5 text-center">
         <p className="text-sm leading-relaxed text-slate-600">
-          Merchant registration is handled in the <strong>Payflow Merchant</strong> mobile app — designed for Gambian businesses with phone verification, business details, and owner ID checks.
+          Merchant registration is handled in the <strong>Sutura Merchant</strong> mobile app — designed for Gambian businesses with phone verification, business details, and owner ID checks.
         </p>
         <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-5 text-left text-sm text-slate-700">
           <p className="font-bold text-slate-900">Run the merchant app locally</p>

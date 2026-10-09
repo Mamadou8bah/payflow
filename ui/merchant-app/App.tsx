@@ -19,10 +19,11 @@ import { OwnerScreen } from "./src/screens/registration/OwnerScreen";
 import { AccountScreen } from "./src/screens/registration/AccountScreen";
 import { PendingScreen } from "./src/screens/PendingScreen";
 import { HomeScreen } from "./src/screens/HomeScreen";
+import { VerificationScreen } from "./src/screens/VerificationScreen";
 import { colors } from "./src/theme";
 
 function Router() {
-  const { screen, loading } = useApp();
+  const { screen, loading, session, setScreen } = useApp();
 
   if (loading) {
     return (
@@ -47,6 +48,8 @@ function Router() {
       return <OwnerScreen />;
     case "reg-account":
       return <AccountScreen />;
+    case "verification":
+      return <VerificationScreen onBack={() => setScreen(session?.userStatus === "PENDING_REVIEW" ? "pending" : "home")} />;
     case "pending":
       return <PendingScreen />;
     case "home":

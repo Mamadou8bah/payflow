@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { authApi } from "../api/merchantRegistration";
 import { bindTokenSession } from "../api/sessionAuth";
 import { clearSession, getSession, saveSession, updateStoredSession, type MerchantSession } from "../storage/session";
@@ -11,6 +11,7 @@ export type Screen =
   | "reg-business"
   | "reg-owner"
   | "reg-account"
+  | "verification"
   | "pending"
   | "home";
 
@@ -89,6 +90,8 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [screen, setScreen] = useState<Screen>("welcome");
   const [session, setSession] = useState<MerchantSession | null>(null);
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reg, setReg] = useState<RegistrationDraft>(emptyReg);
@@ -116,7 +119,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     bindTokenSession({
-      getSession: () => session,
+      getSession: () => sessionRef.current,
       updateSession: persistSession,
       clearSession: signOut,
     });
@@ -149,11 +152,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       signOut,
       completeRegistration: (businessName, userStatus) => {
-        if (userStatus === "PENDING_REVIEW") {
-          setScreen("pending");
-        } else {
-          setScreen("home");
-        }
+        setScreen("verification");
       },
     }),
     [screen, session, loading, error, reg, refreshSession, signOut],

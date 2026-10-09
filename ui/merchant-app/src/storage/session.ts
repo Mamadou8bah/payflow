@@ -1,7 +1,7 @@
 import type { AuthPayload } from "../api/merchantRegistration";
 import { clearSession as clearSecure, loadSession, saveSession as saveSecure } from "./secureSession";
 
-const SESSION_KEY = "payflow_merchant_session";
+const SESSION_KEY = "sutura_merchant_session";
 
 export type MerchantSession = {
   accessToken: string;

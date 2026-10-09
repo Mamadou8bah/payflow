@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { clearAuthSession, getAuthSession, type AppSession } from "../../lib/auth-session";
-import { clearDemoSession, DEMO_AUTH_ENABLED, getDemoSession } from "../../lib/demo-auth";
+import { clearDemoSession, DEMO_AUTH_ENABLED, getDemoSession, type DemoSession } from "../../lib/demo-auth";
 import { buildAgentQrPayload, type AgentQrPayload } from "../../lib/agent-qr";
 import {
   emptyCustomerDashboard,
@@ -14,7 +14,7 @@ import {
 } from "../../lib/mock/customer-dashboard";
 import { walletApi } from "../../lib/wallet-api";
 import { AgentQrPreview } from "../dashboard/agent-qr-preview";
-import { PayflowLoader } from "../components/payflow-loader";
+import { SuturaLoader } from "../components/sutura-loader";
 import { formatTimestamp, inputClass } from "../dashboard/dashboard-shell";
 
 type Tab = "home" | "send" | "topup" | "withdraw" | "activity" | "profile";
@@ -148,7 +148,7 @@ function WalletCard({
       <div className="-mt-6 mx-1 rounded-[1.75rem] bg-gradient-to-br from-[#123c91] via-[#1649a8] to-[#1e5bb8] p-6 text-white">
         <div className="flex items-start justify-between">
           <img
-            src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/payflow_no_bg_f0l7on.png"
+            src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
             alt=""
             className="h-8 w-8 rounded-lg bg-white/10 object-contain p-1"
           />
@@ -329,7 +329,7 @@ export function CustomerAppView() {
           amount: Number(t.amount),
           currency: t.currency,
           status: t.status as CustomerTransaction["status"],
-          method: "Payflow",
+          method: "Sutura",
           time: t.createdAt,
         })),
         pendingCount: transactions.filter((t) => t.status === "PENDING").length,
@@ -365,7 +365,7 @@ export function CustomerAppView() {
       try {
         const destId = Number(sendForm.destination);
         if (!Number.isFinite(destId)) return notify("error", "Enter a valid destination wallet ID");
-        await walletApi.createTransfer({
+        const transfer = await walletApi.createTransfer({
           sourceWalletId: data.wallet.id,
           destinationWalletId: destId,
           amount,
@@ -373,7 +373,10 @@ export function CustomerAppView() {
           reference: `xfer_${Date.now()}`,
         });
         await refreshLiveData();
-        notify("success", `Sent ${formatMoney(amount, data.wallet.currency)} successfully`);
+        if (transfer.transaction.status === "FAILED") return notify("error", "Transfer was declined. No money was sent.");
+        notify("success", transfer.transaction.status === "PENDING"
+          ? "Transfer is pending compliance review. No money has been sent."
+          : `Sent ${formatMoney(amount, data.wallet.currency)} successfully`);
         setSendForm({ destination: "", amount: "", note: "" });
         setTab("home");
       } catch (err) {
@@ -392,11 +395,11 @@ export function CustomerAppView() {
         {
           id,
           type: "TRANSFER_OUT",
-          counterparty: sendForm.destination || "Payflow user",
+          counterparty: sendForm.destination || "Sutura user",
           amount,
           currency: prev.wallet.currency,
           status: "COMPLETED",
-          method: "Payflow wallet",
+          method: "Sutura wallet",
           time: new Date().toISOString(),
         },
         ...prev.transactions,
@@ -418,7 +421,7 @@ export function CustomerAppView() {
           walletId: data.wallet.id,
           amount,
           currency: data.wallet.currency,
-          paymentMethod: topUpForm.method === "agent" ? "AGENT" : "MOBILE_MONEY",
+          paymentMethod: topUpForm.method === "agent" ? undefined : "mobile_money",
           phoneNumber: topUpForm.phone || undefined,
           description: topUpForm.method === "agent" ? "Agent cash-in" : "Mobile money top-up",
           idempotencyKey: `dep_${Date.now()}`,
@@ -435,6 +438,10 @@ export function CustomerAppView() {
               merchant: session?.name ?? "Customer",
             }),
           );
+        }
+        if (topUpForm.method !== "agent") {
+          if (!deposit.paymentUrl) throw new Error(`Checkout is unavailable. Deposit ${deposit.reference} remains pending.`);
+          window.location.assign(deposit.paymentUrl);
         }
         await refreshLiveData();
         notify("success", topUpForm.method === "agent" ? `Deposit ${deposit.reference} ready — show QR to an agent` : "Payment started");
@@ -513,11 +520,12 @@ export function CustomerAppView() {
           walletId: data.wallet.id,
           amount,
           currency: data.wallet.currency,
-          paymentMethod: "AGENT",
-          description: "Agent cash-out",
+          withdrawalMethod: withdrawForm.method === "agent" ? undefined : withdrawForm.method,
+          phoneNumber: withdrawForm.method === "agent" ? undefined : withdrawForm.phone,
+          description: withdrawForm.method === "agent" ? "Agent cash-out" : "Mobile money payout",
           idempotencyKey: `wd_${Date.now()}`,
         });
-        setWithdrawalQr(
+        if (withdrawForm.method === "agent") setWithdrawalQr(
           buildAgentQrPayload({
             operation: "WITHDRAWAL",
             reference: withdrawal.reference,
@@ -581,7 +589,7 @@ export function CustomerAppView() {
   }
 
   if (!session) {
-    return <PayflowLoader message="Opening your wallet" submessage="Fetching balance and activity…" />;
+    return <SuturaLoader message="Opening your wallet" submessage="Fetching balance and activity…" />;
   }
 
   const initials = session.name
@@ -708,7 +716,7 @@ export function CustomerAppView() {
           <div className="space-y-5">
             <header>
               <h1 className="text-xl font-black text-slate-900">Top up wallet</h1>
-              <p className="mt-1 text-sm text-slate-600">Add money via mobile money or at a Payflow agent.</p>
+              <p className="mt-1 text-sm text-slate-600">Add money via mobile money or at a Sutura agent.</p>
             </header>
 
             <form onSubmit={handleTopUp} className="space-y-4 rounded-[1.75rem] border border-slate-200 bg-white p-5">
@@ -756,7 +764,7 @@ export function CustomerAppView() {
               <AgentQrPreview
                 payload={depositQr}
                 title="Deposit QR code"
-                hint="Show this to a Payflow agent to complete your top-up."
+                hint="Show this to a Sutura agent to complete your top-up."
               />
             ) : null}
           </div>
@@ -791,9 +799,16 @@ export function CustomerAppView() {
                   onChange={(e) => setWithdrawForm((prev) => ({ ...prev, method: e.target.value }))}
                 >
                   <option value="agent">Cash at agent</option>
-                  <option value="mobile_money">Mobile money payout</option>
+                  <option value="wave">Wave payout</option>
+                  <option value="afrimoney">Afrimoney payout</option>
                 </select>
               </Field>
+              {withdrawForm.method !== "agent" ? (
+                <Field label="Recipient phone number">
+                  <input className={inputClass} type="tel" required value={withdrawForm.phone}
+                    onChange={(e) => setWithdrawForm((prev) => ({ ...prev, phone: e.target.value }))} />
+                </Field>
+              ) : null}
               <button
                 type="submit"
                 className="h-12 w-full rounded-full bg-[#123c91] text-sm font-black text-white hover:bg-[#0d2f76]"
@@ -835,7 +850,7 @@ export function CustomerAppView() {
               <h1 className="mt-4 text-xl font-black text-slate-900">{session.name}</h1>
               <p className="text-sm text-slate-600">{data.phone}</p>
               <span className="mt-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-[#123c91]">
-                Customer · Demo
+                Customer{isApiSession ? "" : " · Demo"}
               </span>
             </header>
 
@@ -858,6 +873,10 @@ export function CustomerAppView() {
             </div>
 
             <div className="space-y-2">
+              <a href="/app/verification" className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-bold">
+                Verify your identity
+                <span className="text-slate-400">→</span>
+              </a>
               <button
                 type="button"
                 onClick={() => setTab("topup")}

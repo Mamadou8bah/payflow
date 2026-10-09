@@ -4,7 +4,7 @@ export default function HelpCenterPage() {
   return (
     <SitePage
       title="Help center"
-      description="Quick answers for developers, admins, and teams evaluating Payflow."
+      description="Quick answers for developers, admins, and teams evaluating Sutura."
     >
       <ContentBlock title="Developer web access">
         <p>
@@ -15,7 +15,7 @@ export default function HelpCenterPage() {
 
       <ContentBlock title="Customers and merchants">
         <p>
-          Customer wallets and merchant registration live in the Payflow mobile apps. The web merchant registration page
+          Customer wallets and merchant registration live in the Sutura mobile apps. The web merchant registration page
           explains how to run the merchant app locally.
         </p>
       </ContentBlock>

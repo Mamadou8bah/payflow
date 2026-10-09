@@ -1,25 +1,25 @@
 {
   "expo": {
-    "name": "Payflow Merchant",
-    "slug": "payflow-merchant",
-    "scheme": "payflowmerchant",
+    "name": "Sutura Merchant",
+    "slug": "sutura-merchant",
+    "scheme": "suturamerchant",
     "version": "1.0.0",
     "orientation": "portrait",
     "platforms": ["ios", "android", "web"],
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "bundleIdentifier": "gm.payflow.merchant",
+      "bundleIdentifier": "gm.sutura.merchant",
       "supportsTablet": false
     },
     "android": {
-      "package": "gm.payflow.merchant",
+      "package": "gm.sutura.merchant",
       "adaptiveIcon": {
         "backgroundColor": "#0a0a0a"
       }
     },
     "extra": {
       "eas": {
-        "projectId": "payflow-merchant-app"
+        "projectId": "sutura-merchant-app"
       }
     },
     "plugins": ["expo-asset", "expo-font", "expo-secure-store"]

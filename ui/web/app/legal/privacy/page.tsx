@@ -4,18 +4,18 @@ export default function PrivacyPolicyPage() {
   return (
     <SitePage
       title="Privacy policy"
-      description="How Payflow collects, uses, and protects personal and business data across our web platform, APIs, and mobile apps."
+      description="How Sutura collects, uses, and protects personal and business data across our web platform, APIs, and mobile apps."
     >
       <ContentBlock title="Who we are">
         <p>
-          Payflow operates a digital payments platform for wallets, merchant collections, developer APIs, and
-          administrative operations. This policy explains how we handle information when you use payflow.gm services,
+          Sutura operates a digital payments platform for wallets, merchant collections, developer APIs, and
+          administrative operations. This policy explains how we handle information when you use sutura.gm services,
           including the developer web console and related APIs.
         </p>
       </ContentBlock>
 
       <ContentBlock title="Information we collect">
-        <p>Depending on how you use Payflow, we may collect:</p>
+        <p>Depending on how you use Sutura, we may collect:</p>
         <ul className="list-disc space-y-2 pl-5">
           <li>Account details such as name, email, phone number, and role</li>
           <li>Business details for merchant onboarding and verification</li>
@@ -38,7 +38,7 @@ export default function PrivacyPolicyPage() {
       <ContentBlock title="Sharing">
         <p>
           We do not sell personal data. We may share information with processors that help us run infrastructure,
-          messaging, analytics, or compliance workflows, and when required by law or to protect Payflow, our users, or
+          messaging, analytics, or compliance workflows, and when required by law or to protect Sutura, our users, or
           the public.
         </p>
       </ContentBlock>
