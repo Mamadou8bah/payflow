@@ -79,7 +79,11 @@ public class RefreshTokenService {
         }
 
         User user = storedToken.getUser();
-
+        if (!user.isEnabled() || !user.isAccountNonLocked()
+                || user.getUserStatus() == com.mamadou.sutura.user.enums.UserStatus.SUSPENDED
+                || user.getUserStatus() == com.mamadou.sutura.user.enums.UserStatus.BANNED) {
+            throw new InvalidTokenException("Account is unavailable");
+        }
         return generateAccessToken(user);
     }
 

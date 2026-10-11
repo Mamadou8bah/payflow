@@ -1,3 +1,4 @@
+import { demoSession, isDemoMode, serverAvailable, setDemoMode, subscribeDemo } from "../api/demo";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api, type AuthSession, type CustomerRegistration } from "../api/client";
 import { bindTokenSession } from "../api/sessionAuth";
@@ -22,14 +23,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const [loading, setLoading] = useState(true);
+  useEffect(() => subscribeDemo(() => setSession(isDemoMode() ? demoSession("USER") : null)), []);
 
   const persistSession = useCallback(async (stored: AuthSession) => {
-    await saveSession(SESSION_KEY, JSON.stringify(stored));
+    if (!stored.accessToken.startsWith("demo.")) await saveSession(SESSION_KEY, JSON.stringify(stored));
     setSession(stored);
   }, []);
 
   const signOut = useCallback(async () => {
-    await clearSession(SESSION_KEY);
+    if (!isDemoMode()) await clearSession(SESSION_KEY);
+    setDemoMode(false);
     setSession(null);
     setNewlyRegistered(false);
   }, []);
@@ -48,9 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (raw) setSession(JSON.parse(raw) as AuthSession);
       })
       .catch(() => {
-        // Corrupted session â€” force re-login
+        // Corrupted session — force re-login
       })
-      .finally(() => setLoading(false));
+      .finally(async () => { if (!(await serverAvailable())) setDemoMode(true); setLoading(false); });
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {

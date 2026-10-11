@@ -39,7 +39,10 @@ public class FraudDetectionClient {
         SentinelScoreRequest request = new SentinelScoreRequest(
                 event.user_id(), event.transaction_id(), event.amount(), event.currency(),
                 event.timestamp(), event.channel(), event.country(),
-                counterparty == null ? null : counterparty.toString());
+                counterparty == null ? null : counterparty.toString(),
+                event.metadata() == null || event.metadata().get("operation_type") == null ? null
+                        : event.metadata().get("operation_type").toString().toUpperCase(Locale.ROOT),
+                event.metadata() != null && event.metadata().get("available_balance") instanceof java.math.BigDecimal balance ? balance : null);
         long start = System.nanoTime();
         SentinelScoreResponse response = fraudDetectionRestTemplate.postForObject(
                 url, new HttpEntity<>(request, authHeaders()), SentinelScoreResponse.class);

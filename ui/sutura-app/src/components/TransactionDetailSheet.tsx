@@ -1,3 +1,5 @@
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
 import { useState } from "react";
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,20 +14,23 @@ import {
   transactionTypeLabel,
 } from "../utils/transactionDetails";
 
-function statusStyle(status: string) {
+function statusStyle(status: string, colors: ThemeColors) {
   switch (status) {
     case "COMPLETED":
-      return { bg: "#d1fae5", text: colors.emerald700 };
+      return { bg: colors.emerald100, text: colors.emerald700 };
     case "PENDING":
-      return { bg: "#fef3c7", text: "#b45309" };
+      return { bg: colors.orangeLight, text: colors.orange };
     case "FAILED":
-      return { bg: "#fecdd3", text: colors.rose800 };
+      return { bg: colors.rose100, text: colors.rose800 };
     default:
       return { bg: colors.blue100, text: colors.primary };
   }
 }
 
 function DetailRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={[styles.detailRow, last && styles.detailRowLast]}>
       <Text style={styles.detailLabel}>{label}</Text>
@@ -37,6 +42,9 @@ function DetailRow({ label, value, last }: { label: string; value: string; last?
 }
 
 export function TransactionDetailSheet() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const { selectedTransaction, closeTransaction, data } = useWallet();
   const txn = selectedTransaction;
   const [sharing, setSharing] = useState(false);
@@ -63,7 +71,7 @@ export function TransactionDetailSheet() {
 
   const credit = isCreditTransaction(txn);
   const sign = credit ? "+" : "−";
-  const status = statusStyle(txn.status);
+  const status = statusStyle(txn.status, colors);
 
   return (
     <Modal visible animationType="slide" onRequestClose={closeTransaction}>
@@ -109,10 +117,10 @@ export function TransactionDetailSheet() {
             style={({ pressed }) => [styles.shareBtn, (pressed || sharing) && styles.shareBtnPressed]}
           >
             {sharing ? (
-              <ActivityIndicator size="small" color={colors.white} />
+              <ActivityIndicator size="small" color="#181a20" />
             ) : (
               <>
-                <Ionicons name="document-text-outline" size={20} color={colors.white} />
+                <Ionicons name="document-text-outline" size={20} color="#181a20" />
                 <Text style={styles.shareBtnText}>Share PDF receipt</Text>
               </>
             )}
@@ -124,7 +132,7 @@ export function TransactionDetailSheet() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   topBar: {
     flexDirection: "row",
@@ -138,7 +146,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: radii.md,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -147,7 +155,7 @@ const styles = StyleSheet.create({
   topTitle: { fontSize: 16, fontFamily: fonts.bold, color: colors.slate900 },
   content: { padding: 20, paddingBottom: 40, gap: 16 },
   hero: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: 24,
     alignItems: "center",
@@ -166,7 +174,7 @@ const styles = StyleSheet.create({
   statusBadge: { marginTop: 14, paddingHorizontal: 14, paddingVertical: 6, borderRadius: radii.pill },
   statusText: { fontSize: 13, fontFamily: fonts.bold },
   detailsCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -196,6 +204,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   shareBtnPressed: { opacity: 0.92 },
-  shareBtnText: { fontSize: 16, fontFamily: fonts.bold, color: colors.white },
+  shareBtnText: { fontSize: 16, fontFamily: fonts.bold, color: "#181a20" },
   shareError: { fontSize: 13, fontFamily: fonts.medium, color: colors.rose800, textAlign: "center" },
 });

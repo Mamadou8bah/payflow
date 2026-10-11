@@ -1,7 +1,7 @@
-export function formatMoney(amount: number, currency: string): string {
+export function formatMoney(amount: number, currency: string, maximumFractionDigits = 2): string {
   return `${currency} ${amount.toLocaleString("en-GB", {
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    maximumFractionDigits,
   })}`;
 }
 

@@ -32,15 +32,28 @@ public class AgentOperationService {
     private final com.mamadou.sutura.fraud.service.PaymentComplianceService compliance;
 
     @Transactional(readOnly = true)
+    public java.util.List<AgentOperationResponse> history(User agent) {
+        requireAgent(agent);
+        var items = new java.util.ArrayList<AgentOperationResponse>();
+        depositRepository.findTop100ByAgentIdOrderByCreatedAtDesc(agent.getId()).forEach(d ->
+            items.add(toResponse("DEPOSIT", d.getReference(), d.getWallet(), d.getAmount(), d.getStatus().name(), d.getUser(), d.getCreatedAt(), d.getCompletedAt())));
+        withdrawalRepository.findTop100ByAgentIdOrderByCreatedAtDesc(agent.getId()).forEach(w ->
+            items.add(toResponse("WITHDRAWAL", w.getReference(), w.getWallet(), w.getAmount(), w.getStatus().name(), w.getUser(), w.getCreatedAt(), w.getCompletedAt())));
+        items.sort(java.util.Comparator.comparing(AgentOperationResponse::getCreatedAt,
+            java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())));
+        return items;
+    }
+
+    @Transactional(readOnly = true)
     public AgentOperationResponse lookup(String reference, User agent) {
         requireAgent(agent);
         Deposit deposit = depositRepository.findByReferenceIgnoreCase(reference).orElse(null);
         if (deposit != null) {
-            return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser());
+            return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser(), deposit.getCreatedAt(), deposit.getCompletedAt());
         }
         Withdrawal withdrawal = withdrawalRepository.findByReferenceIgnoreCase(reference)
                 .orElseThrow(() -> new IllegalArgumentException("Operation not found for reference " + reference));
-        return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser());
+        return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser(), withdrawal.getCreatedAt(), withdrawal.getCompletedAt());
     }
 
     @Transactional
@@ -60,10 +73,10 @@ public class AgentOperationService {
             throw new WalletOperationException("External provider deposits cannot be completed as agent cash");
         }
         if (deposit.getStatus() == Deposit.DepositStatus.COMPLETED) {
-            return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser());
+            return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser(), deposit.getCreatedAt(), deposit.getCompletedAt());
         }
         if (deposit.getStatus() == Deposit.DepositStatus.PENDING_REVIEW || deposit.getStatus() == Deposit.DepositStatus.FAILED)
-            return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser());
+            return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser(), deposit.getCreatedAt(), deposit.getCompletedAt());
         if (deposit.getStatus() != Deposit.DepositStatus.AWAITING_AGENT && deposit.getStatus() != Deposit.DepositStatus.PENDING
                 && deposit.getStatus() != Deposit.DepositStatus.APPROVED) {
             throw new WalletOperationException("Deposit cannot be completed in status " + deposit.getStatus());
@@ -73,7 +86,7 @@ public class AgentOperationService {
         if (!compliance.assess(product, deposit.getUser(), deposit.getWallet(), "deposit")) {
             deposit.setStatus(product.getStatus() == TransactionStatus.FAILED ? Deposit.DepositStatus.FAILED : Deposit.DepositStatus.PENDING_REVIEW);
             deposit.setFailureReason(product.getFailureReason()); depositRepository.save(deposit);
-            return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser());
+            return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser(), deposit.getCreatedAt(), deposit.getCompletedAt());
         }
         ledgerWalletMovementService.creditWallet(
                 deposit.getWallet(),
@@ -94,7 +107,7 @@ public class AgentOperationService {
             transactionRepository.save(txn);
         });
 
-        return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser());
+        return toResponse("DEPOSIT", deposit.getReference(), deposit.getWallet(), deposit.getAmount(), deposit.getStatus().name(), deposit.getUser(), deposit.getCreatedAt(), deposit.getCompletedAt());
     }
 
     private AgentOperationResponse completeWithdrawal(Withdrawal withdrawal, User agent) {
@@ -102,10 +115,10 @@ public class AgentOperationService {
             throw new WalletOperationException("External provider withdrawals cannot be completed as agent cash");
         }
         if (withdrawal.getStatus() == Withdrawal.WithdrawalStatus.COMPLETED) {
-            return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser());
+            return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser(), withdrawal.getCreatedAt(), withdrawal.getCompletedAt());
         }
         if (withdrawal.getStatus() == Withdrawal.WithdrawalStatus.PENDING_REVIEW || withdrawal.getStatus() == Withdrawal.WithdrawalStatus.FAILED)
-            return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser());
+            return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser(), withdrawal.getCreatedAt(), withdrawal.getCompletedAt());
         if (withdrawal.getStatus() != Withdrawal.WithdrawalStatus.AWAITING_AGENT
                 && withdrawal.getStatus() != Withdrawal.WithdrawalStatus.PENDING
                 && withdrawal.getStatus() != Withdrawal.WithdrawalStatus.APPROVED) {
@@ -116,7 +129,7 @@ public class AgentOperationService {
         if (!compliance.assess(product, withdrawal.getUser(), withdrawal.getWallet(), "withdrawal")) {
             withdrawal.setStatus(product.getStatus() == TransactionStatus.FAILED ? Withdrawal.WithdrawalStatus.FAILED : Withdrawal.WithdrawalStatus.PENDING_REVIEW);
             withdrawal.setRejectionReason(product.getFailureReason()); withdrawalRepository.save(withdrawal);
-            return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser());
+            return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser(), withdrawal.getCreatedAt(), withdrawal.getCompletedAt());
         }
         ledgerWalletMovementService.debitWallet(
                 withdrawal.getWallet(),
@@ -138,7 +151,7 @@ public class AgentOperationService {
             transactionRepository.save(txn);
         });
 
-        return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser());
+        return toResponse("WITHDRAWAL", withdrawal.getReference(), withdrawal.getWallet(), withdrawal.getAmount(), withdrawal.getStatus().name(), withdrawal.getUser(), withdrawal.getCreatedAt(), withdrawal.getCompletedAt());
     }
 
     private void requireAgent(User user) {
@@ -147,9 +160,10 @@ public class AgentOperationService {
         }
     }
 
-    private AgentOperationResponse toResponse(String operation, String reference, Wallet wallet, java.math.BigDecimal amount, String status, User user) {
+    private AgentOperationResponse toResponse(String operation, String reference, Wallet wallet, java.math.BigDecimal amount, String status, User user, LocalDateTime createdAt, LocalDateTime completedAt) {
         String merchantName = user.getFirstName() + " " + user.getLastName();
         return AgentOperationResponse.builder()
+                .createdAt(createdAt).completedAt(completedAt)
                 .operation(operation)
                 .reference(reference)
                 .walletId(wallet.getId())

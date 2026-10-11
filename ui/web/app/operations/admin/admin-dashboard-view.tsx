@@ -1,4 +1,6 @@
 "use client";
+import {usePathname,useRouter} from "next/navigation";
+import {OperationsWorkspace,type OperationsKind} from "./operations-workspace";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -15,7 +17,7 @@ import { DataTable } from "../../dashboard/data-table";
 import { downloadCsv, type DateRangeKey } from "../../dashboard/dashboard-utils";
 import { adminTabs } from "../../dashboard/dashboard-tabs";
 import {
-  initialAdminDashboard,
+  initialAdminDashboard,createDemoAdminDashboard,
   type AdminDashboardData,
   type AdminRiskFlag,
   type AdminTransaction,
@@ -27,9 +29,11 @@ import {
 } from "../../../lib/mock/admin-dashboard";
 import { riskApi } from "../../../lib/risk-api";
 import { adminApi } from "../../../lib/admin-api";
+import {getDemoSession} from "../../../lib/demo-auth";
 import { getAuthSession } from "../../../lib/auth-session";
+import { SupportDesk } from "./support-desk";
 
-type Tab = "overview" | "wallets" | "transactions" | "webhooks" | "reconciliation" | "risk" | "audit";
+type Tab = OperationsKind | "overview" | "wallets" | "transactions" | "webhooks" | "reconciliation" | "risk" | "audit" | "support";
 type ActionMessage = { type: "success" | "error"; text: string } | null;
 
 function nowIso() {
@@ -46,8 +50,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 export function AdminDashboardView() {
-  const [data, setData] = useState<AdminDashboardData>(initialAdminDashboard);
-  const [tab, setTab] = useState<Tab>("overview");
+  const [data, setData] = useState<AdminDashboardData>(()=>getDemoSession()&&!getAuthSession()?createDemoAdminDashboard():initialAdminDashboard);
+  const router=useRouter();
+  const pathname=usePathname();
+  const action=pathname.split("/")[3];
+  const tasks:Partial<Record<Tab,Record<string,string>>>={wallets:{freeze:"Freeze wallet",unfreeze:"Unfreeze wallet"},transactions:{reverse:"Reverse transaction",search:"Search transactions",lookup:"Lookup by ID",reference:"Lookup by reference"},webhooks:{reprocess:"Reprocess webhook",replay:"Replay webhook"}};
+  const tab=(pathname.split("/")[2]||"overview") as Tab;
+  const setTab=(next:Tab)=>router.push(next==="overview"?"/dashboard":`/dashboard/${next}`);
   const [message, setMessage] = useState<ActionMessage>(null);
 
   const [freezeForm, setFreezeForm] = useState({ walletId: "", reason: "", permanent: false });
@@ -75,10 +84,10 @@ export function AdminDashboardView() {
   const loadAdminLiveData = useCallback(async () => {
     if (!hasApiSession()) return;
     try {
-      const [dashboard, wallets, audit] = await Promise.all([
+      const [dashboard, wallets, audit,payments] = await Promise.all([
         adminApi.getDashboard(),
         adminApi.listWallets(),
-        adminApi.getAuditTrail(),
+        adminApi.getAuditTrail(),adminApi.listPayments(),
       ]);
       setData((prev) => ({
         ...prev,
@@ -90,7 +99,7 @@ export function AdminDashboardView() {
         pendingTransactions: dashboard.pendingTransactions,
         totalRiskFlags: dashboard.totalRiskFlags,
         criticalRiskFlags: dashboard.criticalRiskFlags,
-        unresolvedMismatches: dashboard.unresolvedReconciliationMismatches,
+        unresolvedReconciliationMismatches: dashboard.unresolvedReconciliationMismatches,
         operationCounts: {
           reconciliations: dashboard.operationCounts.reconciliations ?? 0,
           freezes: dashboard.operationCounts.freezes ?? 0,
@@ -108,6 +117,7 @@ export function AdminDashboardView() {
           dailyLimit: 0,
           dailyUsed: 0,
         })),
+        transactions:payments.content.map(t=>({...t,amount:`${t.currency} ${t.amount}`,status:t.status as AdminTransaction["status"],sourceWalletId:t.sourceWalletId??0,destinationWalletId:t.destinationWalletId??0})),
         auditLogs: audit.content.map((entry) => ({
           id: String(entry.id),
           timestamp: entry.timestamp,
@@ -119,8 +129,8 @@ export function AdminDashboardView() {
           success: entry.success,
         })),
       }));
-    } catch {
-      // Keep mock data when API is unavailable
+    } catch(err) {
+      setMessage({type:"error",text:err instanceof Error?err.message:"Could not load live admin data."});
     }
   }, []);
 
@@ -256,9 +266,10 @@ export function AdminDashboardView() {
     setReverseForm({ transactionId: "", reason: "", refundToWallet: true });
   }
 
-  function handleReprocessWebhook(e: React.FormEvent) {
+  async function handleReprocessWebhook(e: React.FormEvent) {
     e.preventDefault();
     const webhookId = Number(webhookForm.webhookId);
+    if(hasApiSession()){try{await adminApi.reprocessWebhook(webhookId,webhookForm.reason);await loadAdminLiveData();notify("success",`Webhook ${webhookId} marked for reprocessing`);return;}catch(err){notify("error",err instanceof Error?err.message:"Could not reprocess webhook");return;}}
     const webhook = data.webhooks.find((w) => w.id === webhookId);
     if (!webhook) return notify("error", `Webhook ${webhookId} not found`);
 
@@ -272,7 +283,8 @@ export function AdminDashboardView() {
     setWebhookForm({ webhookId: "", reason: "" });
   }
 
-  function triggerReconciliation(type: "WALLET_LEDGER" | "WEBHOOK_DEPOSIT") {
+  async function triggerReconciliation(type: "WALLET_LEDGER" | "WEBHOOK_DEPOSIT") {
+    if(hasApiSession()){try{const result=await(type==="WALLET_LEDGER"?adminApi.triggerWalletReconciliation():adminApi.triggerWebhookReconciliation()) as ReconciliationReport;setData(current=>({...current,reconciliationReports:[result,...current.reconciliationReports]}));await loadAdminLiveData();notify("success",`Reconciliation ${result.status.toLowerCase()}`);return;}catch(err){notify("error",err instanceof Error?err.message:"Reconciliation failed");return;}}
     const report: ReconciliationReport = {
       id: Date.now(),
       reconciliationType: type,
@@ -305,8 +317,8 @@ export function AdminDashboardView() {
 
     try {
       await riskApi.resolveFlag(flagId, resolveForm.resolutionAction);
-    } catch {
-      // fall through to local mock update
+    } catch(err) {
+      if(hasApiSession()){notify("error",err instanceof Error?err.message:"Could not resolve risk flag");return;}
     }
 
     setData((prev) => ({
@@ -329,8 +341,8 @@ export function AdminDashboardView() {
         `Wallet ${walletId}: critical=${String(result.hasCriticalFlags)}, investigate=${String(result.shouldInvestigate)}`
       );
       return;
-    } catch {
-      // mock fallback
+    } catch(err) {
+      if(hasApiSession()){notify("error",err instanceof Error?err.message:"Could not load risk data");return;}
     }
     const flags = data.riskFlags.filter((f) => f.walletId === walletId && !f.resolved);
     const hasCritical = flags.some((f) => f.level === "CRITICAL");
@@ -338,9 +350,10 @@ export function AdminDashboardView() {
     notify("success", `Wallet ${walletId}: critical=${hasCritical}, investigate=${hasCritical || hasHigh}`);
   }
 
-  function handleResolveMismatch(e: React.FormEvent) {
+  async function handleResolveMismatch(e: React.FormEvent) {
     e.preventDefault();
     const mismatchId = Number(mismatchResolveForm.mismatchId);
+    if(hasApiSession()){try{await adminApi.resolveMismatch(mismatchId,mismatchResolveForm.resolutionAction);}catch(err){notify("error",err instanceof Error?err.message:"Could not resolve mismatch");return;}}
     const mismatch = data.reconciliationMismatches.find((m) => m.id === mismatchId);
     if (!mismatch) return notify("error", `Mismatch ${mismatchId} not found`);
     if (mismatch.resolved) return notify("error", `Mismatch ${mismatchId} is already resolved`);
@@ -372,6 +385,7 @@ export function AdminDashboardView() {
     const amount = Number(riskEvalForm.amount);
     const transactionId = Number(riskEvalForm.transactionId);
 
+    if(!hasApiSession()){const flags=data.riskFlags.filter(f=>f.walletId===walletId&&!f.resolved);notify("success",`Sample risk check: ${flags.length} open flags for wallet ${walletId}. No ML model was run.`);addAudit({actionType:"DEMO_RISK_CHECK",entityType:"TRANSACTION",entityId:transactionId,actor:"admin@sutura.local",changeDescription:`Sample amount ${amount}`,success:true});return;}
     try {
       const [rules, fraud] = await Promise.all([
         riskApi.evaluate(walletId, amount, transactionId),
@@ -400,8 +414,8 @@ export function AdminDashboardView() {
         `Wallet ${walletId}: ${summary.unresolvedFlags} open flags, high risk=${String(summary.hasHighRisk)}`
       );
       return;
-    } catch {
-      // mock fallback
+    } catch(err) {
+      if(hasApiSession()){notify("error",err instanceof Error?err.message:"Could not load risk data");return;}
     }
     const flags = data.riskFlags.filter((f) => f.walletId === walletId);
     notify("success", `Wallet ${walletId} risk summary: ${flags.length} flags, ${flags.filter((f) => !f.resolved).length} open`);
@@ -427,9 +441,10 @@ export function AdminDashboardView() {
     notify(txn ? "success" : "error", txn ? `Reference ${txn.reference}: ${txn.status}, ${txn.amount}` : `Reference ${txnLookupRef} not found`);
   }
 
-  function handleWebhookReplay(e: React.FormEvent) {
+  async function handleWebhookReplay(e: React.FormEvent) {
     e.preventDefault();
     const webhookId = Number(webhookReplayId);
+    if(hasApiSession()){try{await adminApi.reprocessWebhook(webhookId,webhookForm.reason);await loadAdminLiveData();notify("success",`Webhook ${webhookId} marked for reprocessing`);return;}catch(err){notify("error",err instanceof Error?err.message:"Could not reprocess webhook");return;}}
     const webhook = data.webhooks.find((w) => w.id === webhookId);
     if (!webhook) return notify("error", `Webhook ${webhookId} not found`);
     addAudit({ actionType: "REPLAY_WEBHOOK", entityType: "WEBHOOK_EVENT", entityId: webhookId, actor: "admin@sutura.local", changeDescription: "Replay via POST /api/v1/webhooks/replay", success: true });
@@ -446,6 +461,9 @@ export function AdminDashboardView() {
 
   return (
     <DashboardShell tabs={adminTabs} activeTab={tab} onTabChange={(id) => setTab(id as Tab)} message={message}>
+      {tasks[tab]&&<div className="mb-5 flex flex-wrap items-center gap-3">{action?<SecondaryButton onClick={()=>setTab(tab)}>Back to {adminTabs.find(t=>t.id===tab)?.label.toLowerCase()}</SecondaryButton>:Object.entries(tasks[tab]!).map(([key,label])=><SecondaryButton key={key} onClick={()=>router.push(`/dashboard/${tab}/${key}`)}>{label}</SecondaryButton>)}</div>}
+      {(["customers","merchants","agents","deposits","withdrawals","collections","identity"] as string[]).includes(tab)&&<OperationsWorkspace key={tab} kind={tab as OperationsKind}/>}
+      {tab === "support" && <SupportDesk />}
       {tab === "overview" && (
         <div className="space-y-5">
           <DashboardToolbar
@@ -506,21 +524,7 @@ export function AdminDashboardView() {
           </div>
 
           <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-            <PanelCard title="Freeze wallet" subtitle="POST /api/v1/admin/wallets/freeze">
-              <form className="space-y-3" onSubmit={handleFreezeWallet}>
-                <Field label="Wallet ID">
-                  <input className={inputClass} value={freezeForm.walletId} onChange={(e) => setFreezeForm({ ...freezeForm, walletId: e.target.value })} required />
-                </Field>
-                <Field label="Reason">
-                  <input className={inputClass} value={freezeForm.reason} onChange={(e) => setFreezeForm({ ...freezeForm, reason: e.target.value })} required />
-                </Field>
-                <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                  <input type="checkbox" checked={freezeForm.permanent} onChange={(e) => setFreezeForm({ ...freezeForm, permanent: e.target.checked })} className="accent-[#123c91]" />
-                  Permanent freeze
-                </label>
-                <PrimaryButton type="submit">Freeze wallet</PrimaryButton>
-              </form>
-            </PanelCard>
+            <PanelCard title="Wallet controls" subtitle="Manage access from the wallet workspace."><SecondaryButton onClick={()=>router.push("/dashboard/wallets")}>Manage wallets</SecondaryButton></PanelCard>
 
             <PanelCard title="Requires attention" subtitle={`${attentionItems.length} open items`}>
               <ul className="space-y-2">
@@ -562,22 +566,22 @@ export function AdminDashboardView() {
 
       {tab === "wallets" && (
         <OpsLayout
-          main={<WalletTable wallets={data.wallets} onFreeze={(id) => setFreezeForm({ walletId: String(id), reason: "", permanent: false })} onUnfreeze={(id) => setUnfreezeWalletId(String(id))} />}
+          main={action?null:<WalletTable wallets={data.wallets} onFreeze={(id) => {setFreezeForm({ walletId: String(id), reason: "", permanent: false });router.push("/dashboard/wallets/freeze");}} onUnfreeze={(id) => {setUnfreezeWalletId(String(id));router.push("/dashboard/wallets/unfreeze");}} />}
           side={
             <>
-              <PanelCard title="Freeze wallet" subtitle="POST /api/v1/admin/wallets/freeze">
+              {action==="freeze"&&<PanelCard title="Freeze wallet">
                 <form className="space-y-3" onSubmit={handleFreezeWallet}>
-                  <Field label="Wallet ID"><input className={inputClass} value={freezeForm.walletId} onChange={(e) => setFreezeForm({ ...freezeForm, walletId: e.target.value })} required /></Field>
+                  <Field label="Wallet ID"><input type="number" min="1" step="1" inputMode="numeric" className={inputClass} value={freezeForm.walletId} onChange={(e) => setFreezeForm({ ...freezeForm, walletId: e.target.value })} required /></Field>
                   <Field label="Reason"><input className={inputClass} value={freezeForm.reason} onChange={(e) => setFreezeForm({ ...freezeForm, reason: e.target.value })} required /></Field>
                   <PrimaryButton type="submit">Freeze wallet</PrimaryButton>
                 </form>
-              </PanelCard>
-              <PanelCard title="Unfreeze wallet" subtitle="POST /api/v1/admin/wallets/{id}/unfreeze">
+              </PanelCard>}
+              {action==="unfreeze"&&<PanelCard title="Unfreeze wallet">
                 <form className="space-y-3" onSubmit={handleUnfreezeWallet}>
-                  <Field label="Wallet ID"><input className={inputClass} value={unfreezeWalletId} onChange={(e) => setUnfreezeWalletId(e.target.value)} required /></Field>
+                  <Field label="Wallet ID"><input type="number" min="1" step="1" inputMode="numeric" className={inputClass} value={unfreezeWalletId} onChange={(e) => setUnfreezeWalletId(e.target.value)} required /></Field>
                   <SecondaryButton type="submit" className="w-full">Unfreeze wallet</SecondaryButton>
                 </form>
-              </PanelCard>
+              </PanelCard>}
             </>
           }
         />
@@ -585,12 +589,12 @@ export function AdminDashboardView() {
 
       {tab === "transactions" && (
         <OpsLayout
-          main={<TransactionTable transactions={data.transactions} onReverse={(id) => setReverseForm({ ...reverseForm, transactionId: String(id) })} />}
+          main={action?null:<TransactionTable transactions={data.transactions} onReverse={(id) => {setReverseForm({ ...reverseForm, transactionId: String(id) });router.push("/dashboard/transactions/reverse");}} />}
           side={
             <>
-              <PanelCard title="Reverse transaction" subtitle="POST /api/v1/admin/transactions/reverse">
+              {action==="reverse"&&<PanelCard title="Reverse transaction">
                 <form className="space-y-3" onSubmit={handleReverseTransaction}>
-                  <Field label="Transaction ID"><input className={inputClass} value={reverseForm.transactionId} onChange={(e) => setReverseForm({ ...reverseForm, transactionId: e.target.value })} required /></Field>
+                  <Field label="Transaction ID"><input type="number" min="1" step="1" inputMode="numeric" className={inputClass} value={reverseForm.transactionId} onChange={(e) => setReverseForm({ ...reverseForm, transactionId: e.target.value })} required /></Field>
                   <Field label="Reason"><input className={inputClass} value={reverseForm.reason} onChange={(e) => setReverseForm({ ...reverseForm, reason: e.target.value })} required /></Field>
                   <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
                     <input type="checkbox" checked={reverseForm.refundToWallet} onChange={(e) => setReverseForm({ ...reverseForm, refundToWallet: e.target.checked })} className="accent-[#123c91]" />
@@ -598,25 +602,25 @@ export function AdminDashboardView() {
                   </label>
                   <PrimaryButton type="submit">Reverse transaction</PrimaryButton>
                 </form>
-              </PanelCard>
-              <PanelCard title="Search transactions" subtitle="POST /api/v1/transactions/search">
+              </PanelCard>}
+              {action==="search"&&<PanelCard title="Search transactions">
                 <form className="space-y-3" onSubmit={handleTxnSearch}>
                   <Field label="Query"><input className={inputClass} value={txnSearchQuery} onChange={(e) => setTxnSearchQuery(e.target.value)} placeholder="ID, reference, amount" required /></Field>
                   <SecondaryButton type="submit" className="w-full">Search</SecondaryButton>
                 </form>
-              </PanelCard>
-              <PanelCard title="Lookup by ID" subtitle="GET /api/v1/transactions/{id}">
+              </PanelCard>}
+              {action==="lookup"&&<PanelCard title="Lookup by ID">
                 <form className="space-y-3" onSubmit={handleTxnLookupById}>
-                  <Field label="Transaction ID"><input className={inputClass} value={txnLookupId} onChange={(e) => setTxnLookupId(e.target.value)} required /></Field>
+                  <Field label="Transaction ID"><input type="number" min="1" step="1" inputMode="numeric" className={inputClass} value={txnLookupId} onChange={(e) => setTxnLookupId(e.target.value)} required /></Field>
                   <SecondaryButton type="submit" className="w-full">Get transaction</SecondaryButton>
                 </form>
-              </PanelCard>
-              <PanelCard title="Lookup by reference" subtitle="GET /api/v1/transactions/reference">
+              </PanelCard>}
+              {action==="reference"&&<PanelCard title="Lookup by reference">
                 <form className="space-y-3" onSubmit={handleTxnLookupByRef}>
                   <Field label="Reference"><input className={inputClass} value={txnLookupRef} onChange={(e) => setTxnLookupRef(e.target.value)} required /></Field>
                   <SecondaryButton type="submit" className="w-full">Get by reference</SecondaryButton>
                 </form>
-              </PanelCard>
+              </PanelCard>}
             </>
           }
         />
@@ -624,26 +628,23 @@ export function AdminDashboardView() {
 
       {tab === "webhooks" && (
         <OpsLayout
-          main={<WebhookTable webhooks={data.webhooks} onReprocess={(id) => setWebhookForm({ webhookId: String(id), reason: "" })} />}
+          main={action?null:<WebhookTable webhooks={data.webhooks} onReprocess={(id) => {setWebhookForm({ webhookId: String(id), reason: "" });router.push("/dashboard/webhooks/reprocess");}} />}
           side={
             <>
-              <PanelCard title="Reprocess webhook" subtitle="POST /api/v1/admin/webhooks/reprocess">
+              {action==="reprocess"&&<PanelCard title="Reprocess webhook">
                 <form className="space-y-3" onSubmit={handleReprocessWebhook}>
-                  <Field label="Webhook ID"><input className={inputClass} value={webhookForm.webhookId} onChange={(e) => setWebhookForm({ ...webhookForm, webhookId: e.target.value })} required /></Field>
+                  <Field label="Webhook ID"><input type="number" min="1" step="1" inputMode="numeric" className={inputClass} value={webhookForm.webhookId} onChange={(e) => setWebhookForm({ ...webhookForm, webhookId: e.target.value })} required /></Field>
                   <Field label="Reason"><input className={inputClass} value={webhookForm.reason} onChange={(e) => setWebhookForm({ ...webhookForm, reason: e.target.value })} required /></Field>
                   <PrimaryButton type="submit">Reprocess webhook</PrimaryButton>
                 </form>
-              </PanelCard>
-              <PanelCard title="Replay webhook" subtitle="POST /api/v1/webhooks/replay">
+              </PanelCard>}
+              {action==="replay"&&<PanelCard title="Replay webhook">
                 <form className="space-y-3" onSubmit={handleWebhookReplay}>
-                  <Field label="Webhook event ID"><input className={inputClass} value={webhookReplayId} onChange={(e) => setWebhookReplayId(e.target.value)} required /></Field>
+                  <Field label="Webhook event ID"><input type="number" min="1" step="1" inputMode="numeric" className={inputClass} value={webhookReplayId} onChange={(e) => setWebhookReplayId(e.target.value)} required /></Field>
                   <SecondaryButton type="submit" className="w-full">Replay delivery</SecondaryButton>
                 </form>
-              </PanelCard>
-              <PanelCard title="Webhook health" subtitle="GET /api/v1/webhooks/modem-pay/health">
-                <p className="text-sm font-semibold text-emerald-700">Status: OK</p>
-                <p className="mt-1 text-xs text-slate-500">Webhook service is healthy and ready</p>
-              </PanelCard>
+              </PanelCard>}
+
             </>
           }
         />
@@ -671,15 +672,15 @@ export function AdminDashboardView() {
               <MismatchTable mismatches={data.reconciliationMismatches} onResolve={(id) => setMismatchResolveForm({ mismatchId: String(id), resolutionAction: "" })} />
             </div>
             <div className="space-y-5">
-              <PanelCard title="Wallet-ledger run" subtitle="POST /api/v1/admin/reconciliation/wallet-ledger">
+              <PanelCard title="Wallet-ledger run">
                 <p className="mb-4 text-sm text-slate-600">Compare wallet balances against ledger postings and surface mismatches.</p>
                 <PrimaryButton type="button" onClick={() => triggerReconciliation("WALLET_LEDGER")}>Run reconciliation</PrimaryButton>
               </PanelCard>
-              <PanelCard title="Webhook-deposit run" subtitle="POST /api/v1/admin/reconciliation/webhook-deposit">
+              <PanelCard title="Webhook-deposit run">
                 <p className="mb-4 text-sm text-slate-600">Match inbound webhook deposits to credited wallet entries.</p>
                 <PrimaryButton type="button" onClick={() => triggerReconciliation("WEBHOOK_DEPOSIT")}>Run reconciliation</PrimaryButton>
               </PanelCard>
-              <PanelCard title="Manual reconciliation" subtitle="POST /api/v1/reconciliation/manual">
+              <PanelCard title="Manual reconciliation">
                 <form className="space-y-3" onSubmit={handleManualReconciliation}>
                   <Field label="Type">
                     <select className={inputClass} value={manualReconType} onChange={(e) => setManualReconType(e.target.value as "WALLET_LEDGER" | "WEBHOOK_DEPOSIT")}>
@@ -690,7 +691,7 @@ export function AdminDashboardView() {
                   <SecondaryButton type="submit" className="w-full">Trigger manual run</SecondaryButton>
                 </form>
               </PanelCard>
-              <PanelCard title="Resolve mismatch" subtitle="PUT /api/v1/reconciliation/mismatches/{id}/resolve">
+              <PanelCard title="Resolve mismatch">
                 <form className="space-y-3" onSubmit={handleResolveMismatch}>
                   <Field label="Mismatch ID"><input className={inputClass} value={mismatchResolveForm.mismatchId} onChange={(e) => setMismatchResolveForm({ ...mismatchResolveForm, mismatchId: e.target.value })} required /></Field>
                   <Field label="Resolution action"><input className={inputClass} value={mismatchResolveForm.resolutionAction} onChange={(e) => setMismatchResolveForm({ ...mismatchResolveForm, resolutionAction: e.target.value })} required /></Field>
@@ -708,20 +709,20 @@ export function AdminDashboardView() {
             main={<RiskFlagTable flags={data.riskFlags} onResolve={(id) => setResolveForm({ ...resolveForm, flagId: String(id) })} />}
             side={
               <>
-                <PanelCard title="Resolve flag" subtitle="PUT /api/v1/risk/flags/{id}/resolve">
+                <PanelCard title="Resolve flag">
                   <form className="space-y-3" onSubmit={handleResolveFlag}>
                     <Field label="Flag ID"><input className={inputClass} value={resolveForm.flagId} onChange={(e) => setResolveForm({ ...resolveForm, flagId: e.target.value })} required /></Field>
                     <Field label="Resolution"><input className={inputClass} value={resolveForm.resolutionAction} onChange={(e) => setResolveForm({ ...resolveForm, resolutionAction: e.target.value })} required /></Field>
                     <PrimaryButton type="submit">Resolve flag</PrimaryButton>
                   </form>
                 </PanelCard>
-                <PanelCard title="Critical check" subtitle="GET /api/v1/risk/wallets/{id}/critical">
+                <PanelCard title="Critical check">
                   <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); checkCriticalFlags(); }}>
                     <Field label="Wallet ID"><input className={inputClass} value={criticalWalletId} onChange={(e) => setCriticalWalletId(e.target.value)} required /></Field>
                     <SecondaryButton type="submit" className="w-full">Check wallet</SecondaryButton>
                   </form>
                 </PanelCard>
-                <PanelCard title="Evaluate risk" subtitle="POST /api/v1/risk/evaluate">
+                <PanelCard title="Evaluate risk">
                   <form className="space-y-3" onSubmit={handleRiskEvaluate}>
                     <Field label="Wallet ID"><input className={inputClass} value={riskEvalForm.walletId} onChange={(e) => setRiskEvalForm({ ...riskEvalForm, walletId: e.target.value })} required /></Field>
                     <Field label="Amount"><input className={inputClass} value={riskEvalForm.amount} onChange={(e) => setRiskEvalForm({ ...riskEvalForm, amount: e.target.value })} required /></Field>
@@ -729,13 +730,13 @@ export function AdminDashboardView() {
                     <PrimaryButton type="submit">Evaluate</PrimaryButton>
                   </form>
                 </PanelCard>
-                <PanelCard title="Wallet risk summary" subtitle="GET /api/v1/risk/wallets/{id}/summary">
+                <PanelCard title="Wallet risk summary">
                   <form className="space-y-3" onSubmit={handleRiskSummary}>
                     <Field label="Wallet ID"><input className={inputClass} value={riskSummaryWalletId} onChange={(e) => setRiskSummaryWalletId(e.target.value)} required /></Field>
                     <SecondaryButton type="submit" className="w-full">Get summary</SecondaryButton>
                   </form>
                 </PanelCard>
-                <PanelCard title="ML fraud engine" subtitle="GET /api/v1/fraud/health">
+                <PanelCard title="ML fraud engine">
                   <dl className="space-y-2">
                     {fraudHealth ? (
                       <>
@@ -764,7 +765,7 @@ export function AdminDashboardView() {
             }
           />
           <div className="grid gap-5 lg:grid-cols-2">
-            <PanelCard title="Rule statistics" subtitle="GET /api/v1/risk/rules/stats">
+            <PanelCard title="Rule statistics">
               <dl className="space-y-2">
                 {Object.entries(liveRuleStats ?? data.riskRuleStats).map(([rule, count]) => (
                   <div key={rule} className="flex justify-between rounded-2xl bg-slate-50 px-4 py-2.5 text-sm">
@@ -774,7 +775,7 @@ export function AdminDashboardView() {
                 ))}
               </dl>
             </PanelCard>
-            <PanelCard title="Engine config" subtitle="GET /api/v1/risk/config">
+            <PanelCard title="Engine config">
               <dl className="space-y-2">
                 {Object.entries(liveEngineConfig ?? data.riskEngineConfig).map(([key, value]) => (
                   <div key={key} className="flex justify-between rounded-2xl bg-slate-50 px-4 py-2.5 text-sm">
@@ -812,8 +813,8 @@ export function AdminDashboardView() {
 
 function OpsLayout({ main, side }: { main: React.ReactNode; side: React.ReactNode }) {
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-      <div>{main}</div>
+    <div className={main?"space-y-5":"max-w-3xl"}>
+      {main&&<div>{main}</div>}
       <div className="space-y-5">{side}</div>
     </div>
   );
@@ -823,7 +824,7 @@ function WalletTable({ wallets, onFreeze, onUnfreeze }: { wallets: AdminWallet[]
   return (
     <DataTable
       title="Wallets"
-      subtitle={`${wallets.length} managed accounts · GET /api/v1/admin/wallets`}
+      subtitle={`${wallets.length} managed accounts`}
       exportFilename="sutura-admin-wallets"
       searchPlaceholder="Search by owner, ID, status…"
       rows={wallets as unknown as Record<string, unknown>[]}
@@ -940,7 +941,7 @@ function MismatchTable({ mismatches, onResolve }: { mismatches: ReconciliationMi
   return (
     <DataTable
       title="Reconciliation mismatches"
-      subtitle="GET /api/v1/reconciliation/mismatches"
+
       exportFilename="sutura-admin-reconciliation-mismatches"
       dateKey="createdAt"
       searchPlaceholder="Search by type, entity, variance…"

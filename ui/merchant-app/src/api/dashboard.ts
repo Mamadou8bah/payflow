@@ -24,9 +24,9 @@ export async function fetchMerchantDashboard(): Promise<{
     ),
   );
 
-  const totalBalance = balances.reduce((sum, b) => sum + Number(b.balance), 0);
+  const currency = wallets.find(w=>w.status==="ACTIVE")?.currency ?? wallets[0]?.currency ?? "GMD";
+  const totalBalance = balances.reduce((sum, b, index) => sum + (wallets[index].currency===currency && wallets[index].status==="ACTIVE" ? Number(b.balance) : 0), 0);
   const activeLinks = links.filter((l) => l.status === "ACTIVE").length;
-  const currency = wallets[0]?.currency ?? "GMD";
 
   return { totalBalance, activeLinks, currency };
 }

@@ -1,97 +1,49 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { ThemePicker } from "../components/ThemePicker";
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
+import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { BackHeader } from "../components/AppHeader";
-import { ListRow, SegmentedControl } from "../components/SegmentedControl";
+import { AccountMenuRow } from "../components/AccountMenuRow";
 import { PrimaryButton } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { useWallet } from "../context/WalletContext";
-import { colors, radii, spacing } from "../theme";
-import type { ProfileSection } from "../types";
+import { colors, fonts, spacing } from "../theme";
 
 export function ProfileScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const { signOut } = useAuth();
-  const { data, profileSection, setProfileSection, setTab } = useWallet();
-
-  const sections: { id: ProfileSection; label: string }[] = [
-    { id: "profile", label: "Profile" },
-    { id: "settings", label: "Settings" },
-    { id: "support", label: "Support" },
-    { id: "security", label: "Security" },
-  ];
-
-  return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <BackHeader title="Personal account" onBack={() => setTab("more")} />
-
-      <View style={styles.hero}>
-        <Text style={styles.name}>{data.session.name}</Text>
-        <Text style={styles.phone}>{data.session.phone}</Text>
-      </View>
-
-      <SegmentedControl options={sections} value={profileSection} onChange={setProfileSection} />
-
-      <View style={styles.card}>
-        {profileSection === "profile" && (
-          <>
-            <ListRow label="Verify your identity" onPress={() => setTab("verification")} showChevron />
-            <ListRow label="Full name" value={data.session.name} showChevron />
-            <ListRow label="Phone" value={data.session.phone} showChevron />
-            <ListRow label="Email" value={data.session.email} showChevron />
-            <ListRow label="Address" value={data.session.address} showChevron />
-          </>
-        )}
-        {profileSection === "settings" && (
-          <>
-            <ListRow label="Notifications" value="Enabled" showChevron />
-            <ListRow label="Default wallet" value="Main wallet" showChevron />
-            <ListRow label="Language" value="English" showChevron />
-          </>
-        )}
-        {profileSection === "support" && (
-          <>
-            <ListRow label="Chat with support" onPress={() => setTab("support")} showChevron />
-            <ListRow label="FAQ" value="Help center" showChevron />
-            <ListRow label="Report an issue" showChevron />
-          </>
-        )}
-        {profileSection === "security" && (
-          <>
-            <ListRow label="Two-factor auth" value="Off" showChevron />
-            <ListRow label="Change PIN" showChevron />
-            <ListRow label="Biometric login" value="On" showChevron />
-          </>
-        )}
-      </View>
-
-      <PrimaryButton
-        label="Log out"
-        color={colors.rose500}
-        onPress={() => {
-          void signOut();
-        }}
-        style={styles.logout}
-      />
-    </ScrollView>
-  );
+  const { data, profileSection, setProfileSection, setTab, balanceHidden, toggleBalanceHidden, selectedWallet } = useWallet();
+  const settings = profileSection === "settings";
+  return <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <BackHeader title={settings ? "Settings" : "Personal account"} onBack={() => setTab("more")} />
+    {settings ? <>
+      <Text style={styles.section}>Account</Text>
+      <View><AccountMenuRow label="Personal account" icon="person-outline" onPress={() => setProfileSection("profile")} /></View>
+      <Text style={styles.section}>Privacy</Text>
+      <AccountMenuRow label="Hide balances" hint="Keep amounts private across your wallets" icon="eye-off-outline" trailing={<Switch accessibilityLabel="Hide balances" value={balanceHidden} onValueChange={toggleBalanceHidden} trackColor={{false: colors.border, true: colors.orange}} thumbColor={colors.white} />} />
+      <Text style={styles.section}>General</Text>
+      <View><AccountMenuRow label="Language" icon="language-outline" value="English" /></View>
+      <Text style={styles.section}>Appearance</Text>
+      <ThemePicker />
+      <Text style={styles.section}>Help & about</Text>
+      <View><AccountMenuRow label="Help & support" icon="help-circle-outline" onPress={() => setTab("support")} /><AccountMenuRow label="App version" icon="information-circle-outline" value="1.0.0" /></View>
+      <PrimaryButton label="Log out" color={colors.surfaceMuted} textColor={colors.primary} onPress={() => { void signOut(); }} />
+    </> : <>
+      <View style={styles.hero}><View style={styles.avatar}><Text style={styles.initial}>{data.session.name.trim().charAt(0).toUpperCase() || "S"}</Text></View><Text style={styles.name}>{data.session.name}</Text><Text style={styles.subtitle}>Your Sutura account</Text></View>
+      <AccountMenuRow label="Identity verification" hint="Document and face verification" icon="shield-checkmark-outline" onPress={() => setTab("verification")} />
+      <Text style={styles.section}>Account information</Text>
+      <View><AccountMenuRow label="Full name" icon="person-outline" value={data.session.name} /><AccountMenuRow label="Phone" icon="call-outline" value={data.session.phone || "Not provided"} /><AccountMenuRow label="Email" icon="mail-outline" value={data.session.email || "Not provided"} /><AccountMenuRow label="Address" icon="location-outline" value={data.session.address || "Not provided"} /></View>
+      <AccountMenuRow label="Settings" icon="settings-outline" onPress={() => setProfileSection("settings")} />
+      <AccountMenuRow label="Contact support" hint="Get help with your account details" icon="help-circle-outline" onPress={() => setTab("support")} />
+    </>}
+  </ScrollView>;
 }
-
-const styles = StyleSheet.create({
-  content: { padding: spacing.screen, paddingBottom: 32, gap: spacing.gap },
-  hero: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  name: { fontSize: 20, fontWeight: "800", color: colors.slate900 },
-  phone: { fontSize: 14, color: colors.slate500, marginTop: 4 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  logout: { marginTop: 8 },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  content: { padding: spacing.screen, paddingBottom: 32, gap: 12 },
+  section: { fontFamily: fonts.bold, fontSize: 13, color: colors.slate500, marginTop: 16 },
+  hero: { alignItems: "center", paddingVertical: 18, gap: 8 },
+  avatar: { width: 68, height: 68, borderRadius: 34, backgroundColor: colors.surfaceMuted, alignItems: "center", justifyContent: "center" },
+  initial: { fontFamily: fonts.bold, fontSize: 28, color: colors.primary }, name: { fontFamily: fonts.bold, fontSize: 22, color: colors.primary }, subtitle: { fontFamily: fonts.regular, color: colors.slate500, fontSize: 13 },
 });

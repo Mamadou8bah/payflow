@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface DepositRepository extends JpaRepository<Deposit, Long> {
+    List<Deposit> findTop100ByAgentIdOrderByCreatedAtDesc(Long agentId);
     Optional<Deposit> findByReferenceIgnoreCase(String reference);
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @org.springframework.data.jpa.repository.Query("select d from Deposit d where lower(d.reference) = lower(:reference)")

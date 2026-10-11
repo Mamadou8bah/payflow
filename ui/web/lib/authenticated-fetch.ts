@@ -1,3 +1,4 @@
+import {getDemoSession} from "./demo-auth";
 import { API_BASE } from "./api-base";
 import { clearAuthSession, getAuthSession, updateAuthSession } from "./auth-session";
 import { clearMerchantSession, getMerchantTokenSession, updateMerchantSession } from "./merchant-api";
@@ -60,6 +61,7 @@ function clearAllSessions() {
 }
 
 export async function authenticatedFetch(path: string, init?: RequestInit): Promise<Response> {
+  if(getDemoSession()&&!getAuthSession())throw new Error("This request is unavailable in the local demo.");
   const session = getTokenSession();
   if (!session?.accessToken) {
     throw new Error("Not authenticated");

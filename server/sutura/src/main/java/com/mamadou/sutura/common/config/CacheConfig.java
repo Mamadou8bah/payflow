@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
  * Enables caching for frequently accessed data like wallets, transactions, risk flags
  *
  * Redis configuration is handled via application.yaml:
- * - spring.redis.host
- * - spring.redis.port
+ * - spring.data.redis.host
+ * - spring.data.redis.port
  * - spring.cache.type: redis
  * - spring.cache.redis.time-to-live
  */

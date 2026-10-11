@@ -24,8 +24,9 @@ import static org.mockito.Mockito.*;
 class FraudDetectionServiceTest {
     private final FraudDetectionClient client = mock(FraudDetectionClient.class);
     private final FraudDetectionProperties properties = new FraudDetectionProperties();
+    private final com.mamadou.sutura.ledger.service.LedgerBalanceComputationService balances = mock(com.mamadou.sutura.ledger.service.LedgerBalanceComputationService.class);
     private final FraudDetectionService service = new FraudDetectionService(
-            client, properties, mock(RiskFlagService.class), mock(FraudEvaluationLogService.class));
+            client, properties, mock(RiskFlagService.class), mock(FraudEvaluationLogService.class), balances);
 
     @Test
     void onlyAllowCanProceed() {
@@ -52,6 +53,22 @@ class FraudDetectionServiceTest {
         assertThatThrownBy(() -> service.checkBeforeExecution("transfer-42", user, wallet,
                 new BigDecimal("100.00"), "transfer"))
                 .isInstanceOf(FraudBlockedException.class);
+    }
+
+    @Test
+    void sendsLedgerSnapshotForDebitButNeverRecipientBalanceForCredit() {
+        var account = new com.mamadou.sutura.ledger.entity.LedgerAccount();
+        var wallet = Wallet.builder().id(9L).currency("GMD").ledgerAccount(account).build();
+        when(balances.computeBalance(account)).thenReturn(new BigDecimal("200.00"));
+        when(client.score(any())).thenReturn(decision("allow"));
+        var user = User.builder().id(7L).build();
+        service.evaluateTransaction("debit-1", user, wallet, BigDecimal.TEN, "TRANSFER", null);
+        service.evaluateTransaction("credit-1", user, wallet, BigDecimal.TEN, "deposit", null);
+        var captured = org.mockito.ArgumentCaptor.forClass(com.mamadou.sutura.fraud.dto.TransactionEventRequest.class);
+        verify(client, times(2)).score(captured.capture());
+        assertThat(captured.getAllValues().get(0).metadata()).containsEntry("available_balance", new BigDecimal("200.00"));
+        assertThat(captured.getAllValues().get(1).metadata()).doesNotContainKey("available_balance");
+        verify(balances, times(1)).computeBalance(account);
     }
 
     private FraudDecisionResponse decision(String value) {

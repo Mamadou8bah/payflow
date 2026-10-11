@@ -1,3 +1,4 @@
+import { availabilityFetch } from "./demo";
 import { API_BASE } from "./config";
 import { authFetch, readAuthJson } from "./sessionAuth";
 
@@ -26,10 +27,12 @@ export type AgentOperation = {
   status: string;
   userId: number;
   merchantName: string;
+  createdAt: string;
+  completedAt?: string;
 };
 
 async function envelopeRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await availabilityFetch(`${API_BASE}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
@@ -52,6 +55,16 @@ async function authRequest<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const agentApi = {
+  history: () => authRequest<AgentOperation[]>("/api/v1/agent/operations"),
+  customer: (phone: string) =>
+    authRequest<{ id: number; name: string }>(`/api/v1/agent/operations/customer?phone=${encodeURIComponent(phone)}`),
+
+  createCash: (type: "DEPOSIT" | "WITHDRAWAL", userId: number, amount: string, currency: string, idempotencyKey: string) =>
+    authRequest<{ reference: string }>(`/api/v1/${type === "DEPOSIT" ? "deposits" : "withdrawals"}`, {
+      method: "POST",
+      body: JSON.stringify({ userId, amount, currency, idempotencyKey,
+        ...(type === "DEPOSIT" ? { paymentMethod: "agent" } : { withdrawalMethod: "agent" }) }),
+    }),
   login: (email: string, password: string) =>
     envelopeRequest<AuthSession>("/api/auth/login", {
       method: "POST",

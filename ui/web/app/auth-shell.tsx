@@ -20,7 +20,7 @@ export function AuthShell({
           <section className="flex w-full flex-col px-4 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-8 lg:px-12 lg:py-10">
             <a href="/" className="flex shrink-0 items-center gap-2.5 sm:mx-auto sm:gap-3">
               <img
-                src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+                src="/brand/sutura-logo.png"
                 alt="Sutura"
                 className="h-9 w-9 object-contain sm:h-12 sm:w-12"
               />

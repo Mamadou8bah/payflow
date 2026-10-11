@@ -1,3 +1,5 @@
+import {useTheme,useThemedStyles} from "../context/ThemeContext";
+import type {ThemeColors} from "../theme";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackHeader } from "../components/AppHeader";
 import { Card, PrimaryButton } from "../components/ui";
@@ -6,6 +8,9 @@ import { useAgent } from "../context/AgentContext";
 import { colors, fonts, spacing } from "../theme";
 
 function Row({ label, value }: { label: string; value: string }) {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
@@ -15,6 +20,9 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 export function ProfileScreen() {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const { signOut } = useAuth();
   const { session, stats, setTab } = useAgent();
 
@@ -24,10 +32,10 @@ export function ProfileScreen() {
 
       <Card style={styles.card}>
         <Row label="Name" value={session.name} />
-        <Row label="Agent code" value={session.agentCode} />
+        <Row label="Account" value={session.agentCode} />
         <Row label="Location" value={session.location || "—"} />
         <Row label="Phone" value={session.phone || "—"} />
-        <Row label="Email" value={session.email} />
+        <Row label="Email" value={session.email || "Not provided"} />
       </Card>
 
       <Card style={styles.card}>
@@ -48,8 +56,8 @@ export function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.screen, paddingBottom: 120, gap: spacing.gap },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  content: { padding: spacing.screen, paddingBottom: 32, gap: spacing.gap },
   card: { padding: 0, overflow: "hidden" },
   row: {
     flexDirection: "row",

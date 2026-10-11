@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
+    List<Withdrawal> findTop100ByAgentIdOrderByCreatedAtDesc(Long agentId);
     Optional<Withdrawal> findByReferenceIgnoreCase(String reference);
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @org.springframework.data.jpa.repository.Query("select w from Withdrawal w where lower(w.reference) = lower(:reference)")

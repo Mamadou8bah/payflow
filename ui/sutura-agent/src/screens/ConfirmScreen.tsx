@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {useTheme,useThemedStyles} from "../context/ThemeContext";
+import type {ThemeColors} from "../theme";
+import { useEffect, useState } from "react";
+import { Share, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BackHeader } from "../components/AppHeader";
 import { Card, FormError, PrimaryButton } from "../components/ui";
@@ -9,6 +11,9 @@ import { colors, fonts, radii, spacing } from "../theme";
 import { formatMoney, formatTimestamp, operationLabel, statusLabel } from "../utils/format";
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   return (
     <View style={styles.detailRow}>
       <Text style={styles.detailLabel}>{label}</Text>
@@ -18,9 +23,18 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 }
 
 export function ConfirmScreen() {
-  const { activeOperation, completeActive, clearActive, setTab } = useAgent();
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
+  const { activeOperation, completeActive, clearActive, setTab,refreshHistory,historyLoading } = useAgent();
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setDone(false);
+    setError(null);
+  }, [activeOperation?.reference]);
 
   if (!activeOperation) {
     return (
@@ -36,8 +50,11 @@ export function ConfirmScreen() {
   const isDeposit = op.operation === "DEPOSIT";
 
   async function handleComplete() {
+    if (busy) return;
+    setBusy(true);
     setError(null);
     const result = await completeActive();
+    setBusy(false);
     if (!result.ok) {
       setError(result.error ?? null);
       return;
@@ -70,7 +87,7 @@ export function ConfirmScreen() {
         <DetailRow label="Wallet" value={`${op.walletName} (#${op.walletId})`} />
         <DetailRow label="Date" value={formatTimestamp(op.createdAt)} />
         {op.location ? <DetailRow label="Location" value={op.location} /> : null}
-        <DetailRow label="Action" value={isDeposit ? "Collect cash, credit wallet" : "Verify ID, hand over cash"} />
+        <DetailRow label="Action" value={isDeposit ? "Confirm cash-in settlement" : "Verify ID and confirm settlement"} />
       </Card>
 
       {!isCompleted ? (
@@ -78,13 +95,13 @@ export function ConfirmScreen() {
           <View style={styles.note}>
             <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
             <Text style={styles.noteText}>
-              {isDeposit
-                ? "Confirm after receiving cash from the customer."
-                : "Confirm after verifying identity and handing over cash."}
+              Verify the customer and amount before confirming. Exchange cash only after this
+              operation shows Completed. If it enters review, wait for approval.
             </Text>
           </View>
           <FormError message={error} />
-          <PrimaryButton label="Complete operation" onPress={handleComplete} color={brand.orange} />
+          <PrimaryButton label={historyLoading ? "Checking status…" : "Check operation status"} disabled={busy||historyLoading} onPress={()=>void refreshHistory()} color={colors.surfaceMuted}/>
+          <PrimaryButton label={busy ? "Confirming..." : "Complete operation"} disabled={busy||!["AWAITING_AGENT","PENDING","APPROVED"].includes(op.status)} onPress={handleComplete} color={brand.orange} />
         </>
       ) : (
         <>
@@ -93,6 +110,8 @@ export function ConfirmScreen() {
             <Text style={styles.successTitle}>Operation completed</Text>
             <Text style={styles.successSub}>Wallet updated and receipt recorded.</Text>
           </View>
+          <PrimaryButton label="Share receipt" onPress={()=>{Share.share({message:`Sutura ${operationLabel(op.operation)}\n${op.reference}\n${formatMoney(op.amount,op.currency)}\nCompleted: ${formatTimestamp(op.completedAt??op.createdAt)}`}).catch(()=>setError("Could not share receipt."));}} color={colors.surfaceMuted}/>
+          <FormError message={error}/>
           <PrimaryButton label="Back to home" onPress={handleClose} color={colors.primary} />
         </>
       )}
@@ -100,8 +119,8 @@ export function ConfirmScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.screen, paddingBottom: 120, gap: spacing.gap },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  content: { padding: spacing.screen, paddingBottom: 32, gap: spacing.gap },
   emptyWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.screen, gap: 16 },
   emptyText: { fontSize: 16, fontFamily: fonts.medium, color: colors.slate500 },
   hero: {
@@ -111,8 +130,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  heroDeposit: { backgroundColor: colors.emerald100 },
-  heroWithdraw: { backgroundColor: colors.orangeLight },
+  heroDeposit: { backgroundColor: colors.surfaceMuted },
+  heroWithdraw: { backgroundColor: colors.surfaceMuted },
   heroType: {
     fontSize: 12,
     fontFamily: fonts.bold,

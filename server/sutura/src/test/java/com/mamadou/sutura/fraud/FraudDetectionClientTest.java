@@ -30,7 +30,7 @@ class FraudDetectionClientTest {
     private final TransactionEventRequest event = new TransactionEventRequest(
             "transfer-42", "7", new BigDecimal("123456789.12"), "GMD", "sutura", "4829",
             "127.0.0.1", "web-7", "000000", "GM", Instant.parse("2026-10-04T10:00:00Z"),
-            "api", Map.of("counterparty", "customer-8"));
+            "api", Map.of("counterparty", "customer-8", "operation_type", "transfer", "available_balance", new BigDecimal("400.00")));
 
     @BeforeEach
     void configure() {
@@ -47,6 +47,8 @@ class FraudDetectionClientTest {
                 .andExpect(content().string(containsString("\"externalTransactionId\":\"transfer-42\"")))
                 .andExpect(content().string(containsString("\"amount\":123456789.12")))
                 .andExpect(content().string(containsString("\"counterparty\":\"customer-8\"")))
+                .andExpect(content().string(containsString("\"transactionType\":\"TRANSFER\"")))
+                .andExpect(content().string(containsString("\"availableBalance\":400.00")))
                 .andRespond(withSuccess(response("REVIEW"), MediaType.APPLICATION_JSON));
         var decision = client.score(event);
         assertThat(decision.decision()).isEqualTo("review");

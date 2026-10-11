@@ -1,3 +1,5 @@
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
 import Svg, { Circle, G } from "react-native-svg";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, radii, shadow } from "../theme";
@@ -15,6 +17,9 @@ export function DonutChart({
   currency: string;
   centerLabel: string;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const size = 200;
   const stroke = 28;
   const radius = (size - stroke) / 2;
@@ -69,7 +74,7 @@ export function DonutChart({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   wrap: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,

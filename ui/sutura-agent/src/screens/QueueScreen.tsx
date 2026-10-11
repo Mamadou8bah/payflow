@@ -1,19 +1,25 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {useTheme,useThemedStyles} from "../context/ThemeContext";
+import type {ThemeColors} from "../theme";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ScreenTitle } from "../components/AppHeader";
 import { OperationRow } from "../components/OperationRow";
 import { useAgent } from "../context/AgentContext";
 import { colors, fonts, spacing } from "../theme";
 
 export function QueueScreen() {
-  const { pending, openOperation } = useAgent();
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
+  const { pending, openOperation,refreshHistory,historyLoading,historyError } = useAgent();
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView refreshControl={<RefreshControl refreshing={historyLoading} onRefresh={()=>void refreshHistory()}/>} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <ScreenTitle
         title="Pending queue"
         subtitle={`${pending.length} operation${pending.length === 1 ? "" : "s"} awaiting completion`}
       />
 
+      {!!historyError&&<Text accessibilityRole="alert" style={{color:colors.rose800}}>{historyError}</Text>}<Pressable accessibilityRole="button" onPress={()=>void refreshHistory()} disabled={historyLoading}><Text style={{color:colors.primary,paddingVertical:14}}>{historyLoading?"Refreshing…":"Refresh queue"}</Text></Pressable>
       {pending.length === 0 ? (
         <View style={styles.empty}>
           <Text style={styles.emptyTitle}>Queue is clear</Text>
@@ -26,14 +32,14 @@ export function QueueScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.screen, paddingBottom: 120 },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  content: { padding: spacing.screen, paddingBottom: 32 },
   empty: {
     marginTop: 40,
     alignItems: "center",
     padding: 24,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },

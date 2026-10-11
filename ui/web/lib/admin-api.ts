@@ -52,6 +52,8 @@ export type AuditPage = {
 };
 
 export const adminApi = {
+  listPayments:()=>rawRequest<{content:{id:number;reference:string;status:string;amount:number;currency:string;sourceWalletId:number|null;destinationWalletId:number|null;createdAt:string}[]}>("/api/v1/admin/operations/payments"),
+  resolveMismatch:(id:number,reason:string)=>rawRequest(`/api/v1/reconciliation/mismatches/${id}/resolve?resolutionAction=${encodeURIComponent(reason)}`,{method:"PUT"}),
   getDashboard: () => rawRequest<AdminDashboard>("/api/v1/admin/dashboard"),
 
   listWallets: () => rawRequest<AdminWallet[]>("/api/v1/admin/wallets"),

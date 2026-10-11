@@ -13,6 +13,7 @@ export type AgentOperation = {
   userId: number;
   merchantName: string;
   createdAt: string;
+  completedAt?: string;
   location?: string;
 };
 
@@ -41,6 +42,7 @@ export type TabId =
   | "confirm"
   | "new-deposit"
   | "new-withdrawal"
+  | "settings"
   | "profile"
   | "support";
 

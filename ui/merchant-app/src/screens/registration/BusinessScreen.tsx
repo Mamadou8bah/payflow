@@ -1,34 +1,28 @@
+import {OptionPicker} from "../../components/OptionPicker";
+import {fonts as appFonts} from "../../theme";
+import {useTheme,useThemedStyles} from "../../context/ThemeContext";
+import type {ThemeColors} from "../../theme";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { merchantRegistrationApi } from "../../api/merchantRegistration";
-import { AppInput, Field, LinkButton, PrimaryButton, Screen } from "../../components/ui";
+import { SuturaLogo, AppInput, Field, LinkButton, PrimaryButton, Screen } from "../../components/ui";
 import { StepIndicator } from "../../components/StepIndicator";
 import { BUSINESS_CATEGORIES, GAMBIA_REGIONS } from "../../constants/registration";
 import { useApp } from "../../context/AppContext";
 import { colors, radii } from "../../theme";
 
-function OptionList({ options, value, onChange }: { options: readonly { value: string; label: string }[]; value: string; onChange: (v: string) => void }) {
-  return (
-    <View style={styles.options}>
-      {options.map((opt) => {
-        const active = opt.value === value;
-        return (
-          <Pressable key={opt.value} onPress={() => onChange(opt.value)} style={[styles.option, active && styles.optionActive]}>
-            <Text style={[styles.optionText, active && styles.optionTextActive]}>{opt.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 export function BusinessScreen() {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const { reg, updateReg, setScreen, setError, error } = useApp();
   const [loading, setLoading] = useState(false);
   const business = reg.business;
 
   async function handleSubmit() {
+    if(loading)return;
     setError("");
+    if(!business.businessName.trim()||!business.cityOrArea.trim()||!business.streetAddress.trim()){setError("Enter your business name, city and street address.");return;}
     setLoading(true);
     try {
       await merchantRegistrationApi.saveBusiness({
@@ -51,23 +45,24 @@ export function BusinessScreen() {
 
   return (
     <Screen>
+      <View style={{marginBottom:24}}><SuturaLogo size={64}/></View>
       <Text style={styles.title}>Business details</Text>
       <StepIndicator current={3} />
 
       <Field label="Business name">
-        <AppInput value={business.businessName} onChangeText={(v) => updateReg({ business: { ...business, businessName: v } })} placeholder="Acme Shop" />
+        <AppInput accessibilityLabel="Business name" maxLength={120} editable={!loading} value={business.businessName} onChangeText={(v) => updateReg({ business: { ...business, businessName: v } })} placeholder="Acme Shop" />
       </Field>
       <Field label="Category">
-        <OptionList options={BUSINESS_CATEGORIES} value={business.category} onChange={(v) => updateReg({ business: { ...business, category: v } })} />
+        <OptionPicker label="Business category" disabled={loading} options={BUSINESS_CATEGORIES} value={business.category} onChange={(v) => updateReg({ business: { ...business, category: v } })} />
       </Field>
       <Field label="Region">
-        <OptionList options={GAMBIA_REGIONS} value={business.region} onChange={(v) => updateReg({ business: { ...business, region: v } })} />
+        <OptionPicker label="Business region" disabled={loading} options={GAMBIA_REGIONS} value={business.region} onChange={(v) => updateReg({ business: { ...business, region: v } })} />
       </Field>
       <Field label="City / area">
-        <AppInput value={business.cityOrArea} onChangeText={(v) => updateReg({ business: { ...business, cityOrArea: v } })} />
+        <AppInput accessibilityLabel="City or area" maxLength={100} editable={!loading} value={business.cityOrArea} onChangeText={(v) => updateReg({ business: { ...business, cityOrArea: v } })} />
       </Field>
       <Field label="Street address">
-        <AppInput value={business.streetAddress} onChangeText={(v) => updateReg({ business: { ...business, streetAddress: v } })} />
+        <AppInput accessibilityLabel="Street address" maxLength={200} editable={!loading} value={business.streetAddress} onChangeText={(v) => updateReg({ business: { ...business, streetAddress: v } })} />
       </Field>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -78,12 +73,12 @@ export function BusinessScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  title: { fontSize: 24, fontWeight: "800", color: colors.slate900 },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  title: {fontFamily: appFonts.bold, fontSize: 34, fontWeight: "700", color: colors.slate900 },
   error: { color: colors.rose800, fontWeight: "600" },
   options: { gap: 8 },
   option: { borderWidth: 1, borderColor: colors.border, borderRadius: radii.md, padding: 12, backgroundColor: colors.surface },
   optionActive: { borderColor: colors.primary, backgroundColor: colors.blue100 },
-  optionText: { fontSize: 14, fontWeight: "600", color: colors.slate700 },
+  optionText: {fontFamily: appFonts.medium, fontSize: 14, fontWeight: "600", color: colors.slate700 },
   optionTextActive: { color: colors.primary },
 });

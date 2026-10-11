@@ -1,4 +1,6 @@
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
+import { Modal, ScrollView, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useWallet } from "../context/WalletContext";
 import { brand } from "../constants/brand";
@@ -17,21 +19,26 @@ const actions: Action[] = [
   { label: "Top up", subtitle: "Add money via mobile or agent", icon: "add-circle-outline", tab: "topup" },
   { label: "Send money", subtitle: "Transfer to another wallet", icon: "paper-plane-outline", tab: "send" },
   { label: "Withdraw", subtitle: "Cash out at an agent", icon: "cash-outline", tab: "withdraw" },
-  { label: "View activity", subtitle: "Transactions for this wallet", icon: "list-outline", tab: "activity" },
+  { label: "View activity", subtitle: "Recent account transactions", icon: "list-outline", tab: "activity" },
 ];
 
 export function WalletActionsSheet() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const {
     data,
     walletActionsTarget,
     closeWalletActions,
     setTab,
+    setSelectedWalletId,
     balanceHidden,
   } = useWallet();
 
   const wallet = data.wallets.find((w) => w.id === walletActionsTarget);
 
   function runAction(tab: TabId) {
+    if (wallet) setSelectedWalletId(wallet.id);
     closeWalletActions();
     setTab(tab);
   }
@@ -39,7 +46,8 @@ export function WalletActionsSheet() {
   return (
     <Modal visible={walletActionsTarget !== null} transparent animationType="slide" onRequestClose={closeWalletActions}>
       <Pressable style={styles.backdrop} onPress={closeWalletActions}>
-        <Pressable style={styles.sheet} onPress={() => undefined}>
+        <Pressable style={[styles.sheet, { maxHeight: "90%" }]} onPress={() => undefined}>
+          <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.handle} />
 
           {wallet ? (
@@ -72,13 +80,14 @@ export function WalletActionsSheet() {
           <Pressable style={styles.cancelBtn} onPress={closeWalletActions}>
             <Text style={styles.cancelText}>Cancel</Text>
           </Pressable>
+          </ScrollView>
         </Pressable>
       </Pressable>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.45)",

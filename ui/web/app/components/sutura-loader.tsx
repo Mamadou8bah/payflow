@@ -11,7 +11,7 @@ export function SuturaLoader({
     <main className="flex min-h-screen flex-col items-center justify-center bg-[#eaf0ff] px-4">
       <div className="flex w-full max-w-xs flex-col items-center gap-6">
         <img
-          src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+          src="/brand/sutura-logo.png"
           alt="Sutura"
           className="h-11 w-11 object-contain"
         />

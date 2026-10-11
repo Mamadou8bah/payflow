@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class AgentOperationResponse {
+    private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime completedAt;
     private String operation;
     private String reference;
     private Long walletId;

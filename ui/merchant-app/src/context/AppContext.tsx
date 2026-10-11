@@ -1,3 +1,4 @@
+import { demoSession, isDemoMode, serverAvailable, setDemoMode, subscribeDemo } from "../api/demo";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { authApi } from "../api/merchantRegistration";
 import { bindTokenSession } from "../api/sessionAuth";
@@ -13,7 +14,8 @@ export type Screen =
   | "reg-account"
   | "verification"
   | "pending"
-  | "home";
+  | "settings"
+  | "home" | "collections" | "activity" | "wallets" | "support" | "more";
 
 type RegistrationDraft = {
   token: string;
@@ -93,6 +95,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const [loading, setLoading] = useState(true);
+  useEffect(() => subscribeDemo(() => {
+    setSession(isDemoMode() ? demoSession("MERCHANT") : null);
+    setScreen(isDemoMode() ? "home" : "login");
+  }), []);
   const [error, setError] = useState("");
   const [reg, setReg] = useState<RegistrationDraft>(emptyReg);
 
@@ -107,7 +113,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await clearSession();
+    if (!isDemoMode()) await clearSession();
+    setDemoMode(false);
     setSession(null);
     setScreen("welcome");
   }, []);
@@ -126,7 +133,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [session, persistSession, signOut]);
 
   useEffect(() => {
-    refreshSession().finally(() => setLoading(false));
+    refreshSession().finally(async () => { if (!(await serverAvailable())) setDemoMode(true); setLoading(false); });
   }, [refreshSession]);
 
   const value = useMemo<AppContextValue>(

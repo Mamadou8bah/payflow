@@ -1,3 +1,5 @@
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, radii } from "../theme";
@@ -11,6 +13,9 @@ export function SegmentedControl<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.wrap}>
       {options.map((opt) => {
@@ -40,18 +45,21 @@ export function ListRow({
   onPress?: () => void;
   showChevron?: boolean;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Pressable onPress={onPress} style={styles.row} disabled={!onPress}>
       <Text style={styles.rowLabel}>{label}</Text>
       <View style={styles.rowRight}>
         {value ? <Text style={styles.rowValue}>{value}</Text> : null}
-        {showChevron ? <Ionicons name="chevron-forward" size={18} color={colors.slate400} /> : null}
+        {showChevron && onPress ? <Ionicons name="chevron-forward" size={18} color={colors.slate400} /> : null}
       </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   wrap: {
     flexDirection: "row",
     backgroundColor: colors.surfaceMuted,
@@ -75,7 +83,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  rowLabel: { fontSize: 15, color: colors.slate700, fontWeight: "500" },
-  rowRight: { flexDirection: "row", alignItems: "center", gap: 6 },
-  rowValue: { fontSize: 15, fontWeight: "600", color: colors.slate900 },
+  rowLabel: { flexShrink: 1, fontSize: 15, color: colors.slate700, fontWeight: "500" },
+  rowRight: { flexShrink: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 6 },
+  rowValue: { flexShrink: 1, textAlign: "right", fontSize: 15, fontWeight: "600", color: colors.slate900 },
 });

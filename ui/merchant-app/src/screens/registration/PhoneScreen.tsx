@@ -1,3 +1,6 @@
+import {fonts as appFonts} from "../../theme";
+import {useTheme,useThemedStyles} from "../../context/ThemeContext";
+import type {ThemeColors} from "../../theme";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { merchantRegistrationApi } from "../../api/merchantRegistration";
@@ -8,10 +11,14 @@ import { useApp } from "../../context/AppContext";
 import { colors } from "../../theme";
 
 export function PhoneScreen() {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const { reg, updateReg, setScreen, setError, error } = useApp();
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
+    if(loading)return;
     setError("");
     setLoading(true);
     try {
@@ -27,7 +34,7 @@ export function PhoneScreen() {
 
   return (
     <Screen>
-      <SuturaLogo />
+      <View style={{marginBottom:24}}><SuturaLogo size={64}/></View>
       <Text style={styles.title}>Verify your phone</Text>
       <StepIndicator current={1} />
 
@@ -52,8 +59,8 @@ export function PhoneScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  title: { fontSize: 24, fontWeight: "800", color: colors.slate900 },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  title: {fontFamily: appFonts.bold, fontSize: 34, fontWeight: "700", color: colors.slate900 },
   phoneRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, borderRadius: 16, overflow: "hidden", backgroundColor: colors.surface },
   prefix: { paddingHorizontal: 14, fontWeight: "700", color: colors.slate500, backgroundColor: colors.surfaceMuted },
   phoneInput: { flex: 1, borderWidth: 0 },

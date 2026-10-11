@@ -12,4 +12,6 @@ public record SentinelScoreRequest(
         Instant timestamp,
         String channel,
         String location,
-        String counterparty) {}
+        String counterparty,
+        String transactionType,
+        BigDecimal availableBalance) {}

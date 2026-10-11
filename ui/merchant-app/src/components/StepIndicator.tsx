@@ -1,29 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
-import { REGISTRATION_STEPS } from "../constants/registration";
-import { colors } from "../theme";
-
-export function StepIndicator({ current }: { current: number }) {
-  return (
-    <View style={styles.wrap}>
-      {REGISTRATION_STEPS.map((step) => {
-        const active = current === step.id;
-        const done = current > step.id;
-        return (
-          <View key={step.id} style={styles.item}>
-            <View style={[styles.bar, done || active ? styles.barActive : null]} />
-            <Text style={[styles.label, active ? styles.labelActive : null]}>{step.title}</Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  wrap: { flexDirection: "row", gap: 6, marginBottom: 8 },
-  item: { flex: 1 },
-  bar: { height: 4, borderRadius: 99, backgroundColor: colors.slate300 },
-  barActive: { backgroundColor: colors.primary },
-  label: { marginTop: 6, fontSize: 9, fontWeight: "700", textTransform: "uppercase", color: colors.slate500, textAlign: "center" },
-  labelActive: { color: colors.primary },
-});
+import {Text,View} from "react-native";
+import {useTheme} from "../context/ThemeContext";
+import {fonts} from "../theme";
+import {REGISTRATION_STEPS} from "../constants/registration";
+export function StepIndicator({current}:{current:number}){const {colors}=useTheme();return <View style={{gap:10,marginBottom:8}}><Text accessibilityLiveRegion="polite" style={{fontFamily:fonts.regular,color:colors.slate500,fontSize:12}}>Step {current} of {REGISTRATION_STEPS.length}</Text><View style={{flexDirection:"row",gap:6}}>{REGISTRATION_STEPS.map(step=><View key={step.id} style={{flex:1,height:3,borderRadius:2,backgroundColor:step.id<=current?colors.orange:colors.border}}/>)}</View></View>;}

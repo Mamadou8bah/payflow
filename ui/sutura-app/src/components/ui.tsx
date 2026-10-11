@@ -1,7 +1,14 @@
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
+import { useState } from "react";
+import { isAmountDraft } from "../utils/inputValidation";
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { colors, radii, shadow } from "../theme";
 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -11,40 +18,55 @@ export function Field({ label, children }: { label: string; children: React.Reac
 }
 
 export function AppInput(props: TextInputProps) {
-  return <TextInput {...props} placeholderTextColor={colors.slate400} style={[styles.input, props.style]} />;
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
+  const [focused, setFocused] = useState(false);
+  return <TextInput {...props} placeholderTextColor={props.placeholderTextColor ?? colors.slate500} selectionColor={colors.orange} onFocus={event => {setFocused(true); props.onFocus?.(event);}} onBlur={event => {setFocused(false);props.onBlur?.(event);}} style={[styles.input, Platform.OS === "web" && {outlineColor:colors.orange}, focused && {borderColor:colors.orange}, props.style]} />;
 }
 
 export function PrimaryButton({
   label,
   onPress,
-  color = colors.primary,
+  color = colors.orange,
   textColor = colors.white,
   style,
+  disabled = false,
 }: {
   label: string;
   onPress: () => void;
   color?: string;
   textColor?: string;
   style?: ViewStyle;
+  disabled?: boolean;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.primaryButton, { backgroundColor: color, opacity: pressed ? 0.9 : 1 }, style]}>
-      <Text style={[styles.primaryButtonText, { color: textColor }]}>{label}</Text>
+    <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={({ pressed }) => [styles.primaryButton, { backgroundColor: color, opacity: disabled ? 0.5 : pressed ? 0.9 : 1 }, style]}>
+      <Text style={[styles.primaryButtonText, { color: color === colors.orange ? "#181a20" : textColor }]}>{label}</Text>
     </Pressable>
   );
 }
 
 export function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return <View style={[styles.card, shadow.card, style]}>{children}</View>;
 }
 
 export function AmountDisplay({ amount, onChange }: { amount: string; onChange: (v: string) => void }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.amountWrap}>
       <Text style={styles.amountCurrency}>GMD</Text>
       <TextInput
         value={amount}
-        onChangeText={onChange}
+        onChangeText={(value) => { if (isAmountDraft(value)) onChange(value); }}
         keyboardType="decimal-pad"
         placeholder="0.00"
         placeholderTextColor={colors.slate300}
@@ -65,25 +87,29 @@ export function MethodRow({
   onPress: () => void;
   icon?: string;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Pressable onPress={onPress} style={styles.methodRow}>
       <View style={styles.methodIcon}>
-        <Text style={styles.methodIconText}>{icon ?? "â€º"}</Text>
+        <Text style={styles.methodIconText}>{icon ?? "›"}</Text>
       </View>
       <View style={styles.methodBody}>
         <Text style={styles.methodLabel}>{label}</Text>
         {subtitle ? <Text style={styles.methodSub}>{subtitle}</Text> : null}
       </View>
-      <Text style={styles.methodChevron}>â€º</Text>
+      <Text style={styles.methodChevron}>›</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   field: { gap: 8 },
   fieldLabel: { fontSize: 13, fontWeight: "600", color: colors.slate500 },
   input: {
-    height: 52,
+    minHeight: 52,
+    paddingVertical: 12,
     borderRadius: radii.md,
     backgroundColor: colors.surfaceMuted,
     paddingHorizontal: 16,
@@ -94,8 +120,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   primaryButton: {
-    height: 52,
-    borderRadius: radii.pill,
+    minHeight: 52,
+    paddingVertical: 12,
+    borderRadius: radii.sm,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -147,5 +174,7 @@ const styles = StyleSheet.create({
 });
 
 export function Screen({ children }: { children: React.ReactNode }) {
-  return <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 40 }}>{children}</ScrollView>;
+  const { colors } = useTheme();
+
+  return <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.surface }} behavior={Platform.OS === "ios" ? "padding" : undefined}><ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ flexGrow: 1, width: "100%", maxWidth: 560, alignSelf: "center", padding: 24, paddingBottom: 40, gap: 16 }}>{children}</ScrollView></KeyboardAvoidingView>;
 }

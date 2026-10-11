@@ -1,3 +1,5 @@
+import {useTheme,useThemedStyles} from "../context/ThemeContext";
+import type {ThemeColors} from "../theme";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ScreenTitle } from "../components/AppHeader";
@@ -13,7 +15,7 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { label: "Agent profile", subtitle: "Details, location, security", icon: "person-outline", tab: "profile" },
+  { label: "Settings", subtitle: "Appearance and app preferences", icon: "settings-outline", tab: "settings" },
   { label: "Support", subtitle: "Contact Sutura operations", icon: "chatbubbles-outline", tab: "support" },
   { label: "Scan QR", subtitle: "Complete customer operations", icon: "qr-code-outline", tab: "scan" },
   { label: "New cash-in", subtitle: "Deposit on behalf of customer", icon: "arrow-down-circle-outline", tab: "new-deposit" },
@@ -21,6 +23,9 @@ const menuItems: MenuItem[] = [
 ];
 
 export function MoreScreen() {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const { session, setTab } = useAgent();
 
   return (
@@ -41,7 +46,7 @@ export function MoreScreen() {
       </View>
 
       {menuItems.map((item) => (
-        <Pressable key={item.label} onPress={() => setTab(item.tab)} style={[styles.menuRow, shadow.card]}>
+        <Pressable accessibilityRole="button" accessibilityLabel={item.label} key={item.label} onPress={() => setTab(item.tab)} style={styles.menuRow}>
           <View style={styles.menuIcon}>
             <Ionicons name={item.icon} size={22} color={colors.primary} />
           </View>
@@ -56,8 +61,8 @@ export function MoreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.screen, paddingBottom: 120 },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  content: { padding: spacing.screen, paddingBottom: 32 },
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -79,11 +84,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
     backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    padding: 16,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   menuIcon: {
     width: 44,

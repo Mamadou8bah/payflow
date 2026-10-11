@@ -1,5 +1,7 @@
+import {useAutoRefresh} from "../hooks/useAutoRefresh";
+import { normalizePhone } from "../utils/inputValidation";
 import { Linking } from "react-native";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
 import { useAuth } from "./AuthContext";
 import type {
@@ -76,11 +78,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [walletActionsTarget, setWalletActionsTarget] = useState<number | null>(null);
   const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
 
+  useEffect(() => {
+    setData(EMPTY_DASHBOARD);
+    setDepositQr(null); setWithdrawalQr(null); setSelectedTransactionId(null);
+    setSelectedWalletId(0); setTab("home");
+  }, [session?.username]);
+
+  const refreshGeneration=useRef(0);
+  useEffect(()=>()=>{refreshGeneration.current++;},[session]);
   const refreshData = useCallback(async () => {
     if (!session?.accessToken) {
       setData(EMPTY_DASHBOARD);
       return;
     }
+    const request=++refreshGeneration.current;
     setLoading(true);
     try {
       const wallets = await api.listWallets();
@@ -88,14 +99,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         Promise.all(wallets.map((w) => api.getBalance(w.id))),
         api.listTransactions(),
       ]);
+      if(request!==refreshGeneration.current)return;
       setData({
         session: {
           name:
             session.firstName && session.lastName
               ? `${session.firstName} ${session.lastName}`
               : session.username,
-          email: session.username,
-          phone: "",
+          email: session.accessToken.startsWith("demo.") ? "demo@example.invalid" : session.username.includes("@") ? session.username : "",
+          phone: /^\+?[0-9]{7,15}$/.test(session.username) ? session.username : "",
           address: "",
         },
         wallets: wallets.map((w, i) => ({
@@ -136,13 +148,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     } catch {
       // Keep existing data on failure; screens can pull-to-refresh.
     } finally {
-      setLoading(false);
+      if(request===refreshGeneration.current)setLoading(false);
     }
   }, [session]);
 
   useEffect(() => {
     void refreshData();
   }, [refreshData]);
+
+  useAutoRefresh(refreshData,!!session?.accessToken);
 
   const toggleBalanceHidden = useCallback(() => {
     setBalanceHidden((prev) => !prev);
@@ -193,15 +207,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       if (amount > wallet.balance) return { ok: false, error: "Insufficient balance" };
 
       try {
-        const destId = Number(destination);
-        if (!Number.isFinite(destId)) {
-          return { ok: false, error: "Enter a valid destination wallet ID" };
+        const phone = normalizePhone(destination);
+        if (!phone) {
+          return { ok: false, error: "Enter a valid recipient phone number, including its country code" };
         }
         const transfer = await api.createTransfer({
           sourceWalletId: walletId,
-          destinationWalletId: destId,
+          recipientPhone: phone,
           amount,
-          description: `Transfer to wallet ${destId}`,
+          description: `Transfer to ${phone}`,
           reference: `xfer_${Date.now()}`,
         });
         await refreshData();

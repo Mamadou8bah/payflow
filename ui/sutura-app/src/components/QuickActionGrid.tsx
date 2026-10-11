@@ -1,3 +1,5 @@
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, radii } from "../theme";
@@ -10,12 +12,15 @@ type Action = {
 };
 
 export function QuickActionGrid({ actions }: { actions: Action[] }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.grid}>
       {actions.map((action) => (
-        <Pressable key={action.label} onPress={action.onPress} style={styles.item}>
-          <View style={[styles.circle, { backgroundColor: action.color }]}>
-            <Ionicons name={action.icon} size={22} color={colors.white} />
+        <Pressable accessibilityRole="button" accessibilityLabel={action.label} key={action.label} onPress={action.onPress} style={styles.item}>
+          <View style={styles.circle}>
+            <Ionicons name={action.icon} size={22} color={colors.primary} />
           </View>
           <Text style={styles.label}>{action.label}</Text>
         </Pressable>
@@ -24,13 +29,14 @@ export function QuickActionGrid({ actions }: { actions: Action[] }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   grid: { flexDirection: "row", justifyContent: "space-between" },
-  item: { alignItems: "center", width: "22%" },
+  item: { alignItems: "center", flex: 1 },
   circle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,

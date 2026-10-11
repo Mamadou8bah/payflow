@@ -1,7 +1,14 @@
-import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import {useTheme,useThemedStyles} from "../context/ThemeContext";
+import type {ThemeColors} from "../theme";
+import { KeyboardAvoidingView, Platform, ScrollView, Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { colors, fonts, radii, shadow } from "../theme";
 
 export function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   return (
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -12,13 +19,17 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 }
 
 export function AppInput(props: TextInputProps) {
-  return <TextInput {...props} placeholderTextColor={colors.slate400} style={[styles.input, props.style]} />;
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
+  const [focused,setFocused]=useState(false);
+  return <TextInput {...props} selectionColor={colors.orange} onFocus={event=>{setFocused(true);props.onFocus?.(event);}} onBlur={event=>{setFocused(false);props.onBlur?.(event);}} placeholderTextColor={props.placeholderTextColor ?? colors.slate500} style={[styles.input, focused && {borderColor:colors.orange}, props.style]} />;
 }
 
 export function PrimaryButton({
   label,
   onPress,
-  color = colors.primary,
+  color = colors.orange,
   disabled,
   style,
 }: {
@@ -28,8 +39,13 @@ export function PrimaryButton({
   disabled?: boolean;
   style?: ViewStyle;
 }) {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled }}
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
@@ -38,26 +54,33 @@ export function PrimaryButton({
         style,
       ]}
     >
-      <Text style={styles.primaryButtonText}>{label}</Text>
+      <Text style={[styles.primaryButtonText, { color: color === colors.orange ? "#181a20" : color === colors.primary ? colors.background : color === colors.surfaceMuted || color === colors.background ? colors.primary : colors.white }]}>{label}</Text>
     </Pressable>
   );
 }
 
 export function Card({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
-  return <View style={[styles.card, shadow.card, style]}>{children}</View>;
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
+  return <View style={[styles.card, style]}>{children}</View>;
 }
 
 export function FormError({ message }: { message?: string | null }) {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   if (!message) return null;
   return <Text style={styles.error}>{message}</Text>;
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   field: { gap: 8 },
   fieldLabel: { fontSize: 13, fontFamily: fonts.bold, color: colors.slate700 },
   fieldHint: { fontSize: 12, fontFamily: fonts.regular, color: colors.slate500 },
   input: {
-    height: 52,
+    minHeight: 52,
+    paddingVertical: 12,
     borderRadius: radii.md,
     backgroundColor: colors.surfaceMuted,
     paddingHorizontal: 16,
@@ -68,8 +91,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   primaryButton: {
-    height: 52,
-    borderRadius: radii.pill,
+    minHeight: 52,
+    paddingVertical: 12,
+    borderRadius: radii.sm,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -83,3 +107,14 @@ const styles = StyleSheet.create({
   },
   error: { fontSize: 13, fontFamily: fonts.medium, color: colors.rose800, textAlign: "center" },
 });
+
+export function Screen({ children }: { children: React.ReactNode }) {
+ const {colors}=useTheme();
+
+  return <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : undefined}><ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ flexGrow: 1, width: "100%", maxWidth: 560, alignSelf: "center", padding: 24, paddingBottom: 40, gap: 16 }}>{children}</ScrollView></KeyboardAvoidingView>;
+}
+
+export function PasswordInput(props:TextInputProps){
+ const {colors}=useTheme();const [visible,setVisible]=useState(false);
+ return <View style={{position:"relative"}}><AppInput {...props} secureTextEntry={!visible} autoCapitalize="none" autoCorrect={false} style={[props.style,{paddingRight:52}]}/><Pressable accessibilityRole="button" accessibilityLabel={visible?"Hide password":"Show password"} onPress={()=>setVisible(!visible)} style={{position:"absolute",right:4,top:4,width:44,height:44,alignItems:"center",justifyContent:"center"}}><Ionicons name={visible?"eye-outline":"eye-off-outline"} size={20} color={colors.slate500}/></Pressable></View>;
+}

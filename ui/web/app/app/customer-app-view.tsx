@@ -148,7 +148,7 @@ function WalletCard({
       <div className="-mt-6 mx-1 rounded-[1.75rem] bg-gradient-to-br from-[#123c91] via-[#1649a8] to-[#1e5bb8] p-6 text-white">
         <div className="flex items-start justify-between">
           <img
-            src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+            src="/brand/sutura-logo.png"
             alt=""
             className="h-8 w-8 rounded-lg bg-white/10 object-contain p-1"
           />

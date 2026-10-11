@@ -60,6 +60,8 @@ export function DashboardShell({
     .slice(0, 2)
     .toUpperCase();
 
+  const adminNavigation=session?.role === "admin";
+
   const activeLabel = tabs.find((t) => t.id === activeTab)?.label ?? "Menu";
 
   function selectTab(id: string) {
@@ -130,19 +132,19 @@ export function DashboardShell({
     );
 
   return (
-    <div className="min-h-screen bg-[#eaf0ff] text-slate-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white">
         <div className="mx-auto flex h-14 w-[min(1440px,calc(100%-1rem))] items-center gap-3 px-2 sm:h-16 sm:px-3 lg:px-5">
           <a href="/" className="flex shrink-0 items-center gap-2">
             <img
-              src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+              src="/brand/sutura-logo.png"
               alt="Sutura"
               className="h-8 w-8 object-contain"
             />
             <span className="text-base font-black tracking-tight text-[#123c91]">Sutura</span>
           </a>
 
-          <nav className="mx-auto hidden min-w-0 max-w-full items-center gap-1 overflow-x-auto rounded-full bg-slate-100 p-1 md:flex [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <nav className={`${adminNavigation?"md:hidden":"md:flex"} mx-auto hidden min-w-0 max-w-full items-center gap-1 overflow-x-auto rounded-full bg-slate-100 p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
             {tabs.map((item) => {
               const active = activeTab === item.id;
               return (
@@ -224,7 +226,8 @@ export function DashboardShell({
 
       {mobileMenu}
 
-      <main className="mx-auto w-[min(1440px,calc(100%-1rem))] overflow-x-clip px-2 pb-[5.5rem] pt-4 sm:px-3 sm:pt-5 md:pb-6 lg:px-5 lg:pt-6">
+      {adminNavigation&&<aside aria-label="Admin navigation" className="fixed bottom-0 left-0 top-16 hidden w-56 overflow-y-auto border-r border-slate-200 bg-white p-4 md:block"><p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Workspace</p>{tabs.map(item=><button key={item.id} type="button" aria-label={item.label} aria-current={activeTab===item.id?"page":undefined} onClick={()=>onTabChange(item.id)} className={`mb-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold ${activeTab===item.id?"bg-amber-100 text-slate-950":"text-slate-600 hover:bg-slate-50"}`}>{item.icon}{item.label}</button>)}</aside>}
+      <main className={`${adminNavigation?"md:ml-56 md:w-[calc(100%-14rem)]":"mx-auto w-[min(1440px,calc(100%-1rem))]"} overflow-x-clip px-4 pb-[5.5rem] pt-4 sm:px-6 sm:pt-5 md:pb-6 lg:px-8 lg:pt-6`}>
         {message ? (
           <div
             className={`mb-5 rounded-2xl px-4 py-3 text-sm font-semibold ${

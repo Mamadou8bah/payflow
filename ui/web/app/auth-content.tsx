@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { authApi } from "../lib/auth-api";
-import { getDashboardPath, mapBackendRole, saveAuthSession } from "../lib/auth-session";
+import { clearAuthSession, getDashboardPath, mapBackendRole, saveAuthSession } from "../lib/auth-session";
 import { authenticateDemoUser, DEMO_AUTH_ENABLED, getDemoDashboardPath, saveDemoSession } from "../lib/demo-auth";
-import { DEMO_PASSWORD, demoUsers } from "../lib/mock/demo-users";
 import { toE164Phone } from "../lib/merchant-registration";
 import { AuthField, AuthShell, DividerText, SocialButton } from "./auth-shell";
 
-const webDemoUsers = demoUsers.filter((user) => user.role === "admin" || user.role === "developer");
 
 function MailIcon() {
   return (
@@ -50,34 +48,6 @@ function FacebookIcon() {
   );
 }
 
-function DemoAccountsPanel({ onSelect }: { onSelect: (email: string) => void }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-900 sm:px-4 sm:py-4">
-      <p className="font-bold">Demo logins</p>
-      <p className="mt-1 text-xs text-slate-600 sm:text-sm">
-        Web access is for developers and admins. Password:{" "}
-        <code className="rounded bg-white px-1.5 py-0.5 text-xs">{DEMO_PASSWORD}</code>
-      </p>
-      <div className="mt-3 grid gap-2">
-        {webDemoUsers.map((user) => (
-          <button
-            key={user.email}
-            type="button"
-            onClick={() => onSelect(user.email)}
-            className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left transition-colors hover:bg-slate-100"
-          >
-            <span className="min-w-0">
-              <span className="block font-semibold capitalize text-slate-900">{user.role}</span>
-              <span className="block truncate text-xs text-slate-600">{user.email}</span>
-            </span>
-            <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-[#123c91]">Use</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 const inputClass =
   "h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-500 focus:border-[#123c91] focus:ring-4 focus:ring-blue-100";
 
@@ -110,6 +80,7 @@ export function CombinedAuthPage({ initialMode = "login" }: { initialMode?: "log
             setError("Web login is for developer and admin accounts. Use the mobile apps for customer or merchant access.");
             return;
           }
+          clearAuthSession();
           saveDemoSession(demoUser);
           window.location.href = getDemoDashboardPath(demoUser.role);
           return;
@@ -173,18 +144,11 @@ export function CombinedAuthPage({ initialMode = "login" }: { initialMode?: "log
     }
   }
 
-  function handleDemoSelect(selectedEmail: string) {
-    setEmail(selectedEmail);
-    setPassword(DEMO_PASSWORD);
-    setError("");
-  }
-
   return (
     <AuthShell heading={isLogin ? "Welcome back!" : "Create developer account"}>
       <div className="mt-5 sm:mt-6">
         {isLogin ? (
           <form className="space-y-3.5 sm:space-y-4" onSubmit={handleLogin}>
-            {DEMO_AUTH_ENABLED ? <DemoAccountsPanel onSelect={handleDemoSelect} /> : null}
 
             <AuthField
               type="email"

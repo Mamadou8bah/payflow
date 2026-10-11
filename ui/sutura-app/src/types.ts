@@ -56,6 +56,7 @@ export type CustomerDashboardData = {
 export type TabId =
   | "home"
   | "wallets"
+  | "scan"
   | "send"
   | "activity"
   | "more"

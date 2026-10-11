@@ -29,7 +29,7 @@ export function DashboardShell({
         <div className="mx-auto flex w-[min(1440px,calc(100%-2rem))] items-center gap-4 px-4 py-4 lg:px-6">
           <a href="/" className="flex items-center gap-3">
             <img
-              src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+              src="/brand/sutura-logo.png"
               alt="Sutura"
               className="h-10 w-10 object-contain"
             />

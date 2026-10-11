@@ -45,7 +45,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String username = jwtConfig.extractSubject(token);
-        userRepository.findByLoginIdentifier(username).ifPresent(user -> {
+        userRepository.findByLoginIdentifier(username).filter(user -> user.isEnabled() && user.isAccountNonLocked()
+                && user.getUserStatus() != com.mamadou.sutura.user.enums.UserStatus.SUSPENDED
+                && user.getUserStatus() != com.mamadou.sutura.user.enums.UserStatus.BANNED).ifPresent(user -> {
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     user,
                     null,

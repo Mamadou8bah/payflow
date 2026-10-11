@@ -33,6 +33,7 @@ public class FraudDetectionService {
     private final FraudDetectionProperties properties;
     private final RiskFlagService riskFlagService;
     private final FraudEvaluationLogService fraudEvaluationLogService;
+    private final com.mamadou.sutura.ledger.service.LedgerBalanceComputationService balances;
 
     public FraudDecisionResponse evaluateTransaction(
             String transactionId,
@@ -169,6 +170,11 @@ public class FraudDetectionService {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("operation_type", operationType);
         metadata.put("wallet_id", wallet.getId());
+        if (java.util.Set.of("transfer", "withdrawal", "payment", "debit").contains(operationType.toLowerCase(java.util.Locale.ROOT))
+                && wallet.getLedgerAccount() != null) {
+            BigDecimal available = balances.computeBalance(wallet.getLedgerAccount());
+            if (available != null) metadata.put("available_balance", available);
+        }
 
         return new TransactionEventRequest(
             transactionId,

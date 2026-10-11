@@ -12,8 +12,11 @@ public class TransferRequest {
     /** Optional — primary wallet is used when omitted */
     private Long sourceWalletId;
 
-    @NotNull(message = "Destination wallet is required")
+    /** Used by internal collection flows; customer transfers use recipientPhone. */
     private Long destinationWalletId;
+
+    @Size(max = 40, message = "Recipient phone number is too long")
+    private String recipientPhone;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")

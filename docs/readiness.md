@@ -1,6 +1,6 @@
 # Readiness checklist
 
-Updated 9 October 2026. Virtual cards are excluded by the user's explicit scope
+Updated 11 October 2026. Virtual cards are excluded by the user's explicit scope
 decision; the Sentinel LaTeX proposal has been updated accordingly.
 
 ## Implemented and checked
@@ -39,6 +39,21 @@ decision; the Sentinel LaTeX proposal has been updated accordingly.
   evaluation report and a caller-supplied PaySim CSV training path.
 - Sentinel integration checks with PostgreSQL and actual Python HTTP endpoints.
 
+## App completion pass — 11 October
+
+- Customer, merchant and agent use bundled Inter and persisted light/dark/system themes.
+- Read-only dashboard data refreshes every 30 seconds while visible and on return/focus.
+- Merchant collections, payment QR, wallets, activity, support and account navigation are implemented.
+- Merchant onboarding has validated phone, OTP, business, owner and account stages, compact option sheets and password visibility controls.
+- Both customer and merchant have sample identity walkthroughs; these do not grant verification.
+- Agent queue refresh checks scanned references, disables settlement for review/terminal states and exposes completed receipt sharing. Live queue references are stored per signed-in account and revalidated on reload; demo queues are not persisted.
+- Full Sutura backend suite: 117 passed. Shared/customer UI tests: 25 passed; merchant regression: 1 passed. Sentinel transaction service: 22 passed; identity service: 24 passed.
+- Browser checks cover merchant onboarding validation, sample verification, agent status refresh/completion/receipt controls. Mocked service checks do not establish live cross-product readiness.
+
+## Admin workflow alignment
+
+The web admin now includes customer and agent directories, merchant onboarding review, stored identity results, cash-in/deposit and cash-out/payout tracking, and merchant collection tracking. Live merchant approval requires VERIFIED identity, activates only pending merchant accounts and writes an audit entry. New list endpoints are admin-only and paginated. See [admin-workflows.md](admin-workflows.md) for implemented controls and limits.
+
 ## Still required before claiming complete readiness
 
 1. **Identity training and evaluation.** Training, manifest validation, four
@@ -47,39 +62,53 @@ decision; the Sentinel LaTeX proposal has been updated accordingly.
    supplied. Separate labelled identity/attack data is still needed; PaySim
    cannot train face, OCR, tampering or anti-spoof models. Verification stays
    unavailable until all four artifacts meet independent holdout gates.
-2. **Payment data evaluation.** PaySim is now available locally at
-   `sentinel/services/transaction-ml/data/paysim.csv`. Training has not been run
-   on it. Synthetic checks demonstrate plumbing only; evaluate real holdout
-   metrics and assess the limited amount/time inputs before relying on scores.
-3. **Provider acceptance and recovery.** The adapter now follows the documented
+2. **Standalone document scoring.** Sentinel's non-stub gateway calls
+   `/cv/document-verify`, which is not implemented by the image service. Its
+   invoice/cheque OCR and signature models still need a supported contract and
+   appropriate labelled data; the identity OCR baseline must not be presented
+   as an invoice/cheque model.
+3. **Payment model acceptance.** Versions 1, 2 and 3 are trained locally.
+   Version 3's optional pre-debit balance model detected 1,645/1,646 fraud cases
+   with one false positive on the previously used PaySim window (99.94% recall
+   and precision). Missing-balance stress recall is only 16.52%; legacy amount
+   rules combined with the model yield 76.94% FPR on these simulated amounts.
+   These are not production-readiness results. Real independent payment data,
+   currency-aware policies and review-workload acceptance remain required.
+   Sutura supplies its actual ledger balance for debit operations only; Sentinel
+   stores the first assessment snapshot and retries reuse the original decision.
+   Apply Sentinel migrations 002/003 before updating the Sutura caller. Existing
+   inference has not been switched automatically.
+4. **Provider acceptance and recovery.** The adapter now follows the documented
    payment-intent, transfer and signed webhook formats. It still needs sandbox
    credentials and an actual checkout/payout acceptance run. Historical payouts
    without a hold, provider reversals and unresolved timeouts require explicit
    reconciliation; never automatically refund an unknown outcome.
-4. **Settlement review acceptance.** Cash and provider requests now persist
+5. **Settlement review acceptance.** Cash and provider requests now persist
    review/block decisions. Matched deposit approval credits once; payout
    approval waits for the recovery worker to reserve funds before dispatch.
    Cash approval still requires an agent action within 15 minutes. Received
    provider deposits rejected by review remain uncredited and need provider
    refund/reconciliation; automatic provider reversals are not implemented.
-5. **Live cross-product demonstration.** Registration, role restrictions, merchant
+6. **Live cross-product demonstration.** Registration, role restrictions, merchant
    collections, reversals/reconciliation, native camera permissions and failure
    recovery still need complete scenario coverage. Existing client build checks
    do not replace device/browser and two-application acceptance tests.
-6. **Deployment.** Apply the manual migrations, configure independent credentials,
+7. **Deployment.** Apply the manual migrations, configure independent credentials,
    and validate the intended PostgreSQL/Redis deployment. Docker builds/Compose
    execution have not been tested because Docker is unavailable in this shell.
 
 ## Database upgrade
 
-Apply `server/sutura/db/migrations/001` through `008` in order on an existing
+Apply `server/sutura/db/migrations/001` through `009` in order on an existing
 Sutura PostgreSQL schema. Reconcile historical duplicate non-null payment keys
 before adding the new unique indexes. New scoped keys are different from old
 global keys; drain old in-flight requests before switching versions. Do not
 reissue an old provider request under a new key without reconciliation.
 
 Sentinel has a separate outbox migration in
-`sentinel/backend/db/migrations/001_signed_webhook_outbox.sql` from the workspace
+`sentinel/backend/db/migrations/001_signed_webhook_outbox.sql` and
+`sentinel/backend/db/migrations/002_transaction_type.sql` and
+`sentinel/backend/db/migrations/003_transaction_balance_context.sql` from the workspace
 root. Fresh schemas are created by Hibernate locally; that is not an automatic
 production migration strategy.
 
@@ -95,5 +124,13 @@ create a payment. Local signed fixture tests are not a live provider acceptance 
 
 ## Local verification
 
-See [validation-2026-10-09.md](validation-2026-10-09.md) for the latest commands,
+See [validation-2026-10-10.md](validation-2026-10-10.md) for the latest commands,
 results and remaining acceptance work. These changes are local and uncommitted.
+
+### Admin account actions
+
+Agent provisioning and customer/agent suspension/restoration now have live admin endpoints and demo UI actions. Provisioning validates international phone/email and password length, hashes the password, fixes the AGENT role and records an audit reason. Suspension revokes refresh sessions; access-token authentication and refresh reject suspended, banned, disabled or locked accounts. Restoration cannot activate pending merchant applications. The existing backend regression suite passed (122 tests), followed by 11 focused account/access/admin tests; web TypeScript and browser demo create/suspend/restore checks passed. Merchant resubmission and credential rotation remain unfinished.
+
+Admin navigation now uses separate `/dashboard/{section}` routes with a desktop sidebar. Account/operation details use `/dashboard/{section}/{id}`, and agent creation uses `/dashboard/agents/new`. Wallet freeze/unfreeze, payment reversal/search/lookups and webhook reprocessing/replay each have a dedicated task page. Record pages support direct loading and reload via an admin-only lookup endpoint, and back navigation returns to the list. Merchant details also expose separate account access state and suspension/restoration, without changing application approval status. Pending applications cannot be activated through the account control. Browser checks covered routed agent creation, suspension/restoration, back navigation, direct record loading/reload and mobile overflow.
+
+Validation for the routed admin screens: web TypeScript passed; 13 focused backend tests passed, including role-restricted record lookup and management-only account details. Browser checks passed for merchant suspension preserving application approval, pending-merchant control restrictions, missing records, and the routed create/detail/task flows. This restructuring does not complete merchant resubmission or external-provider acceptance.

@@ -1,4 +1,7 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
+import { useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { brand } from "../constants/brand";
@@ -20,7 +23,7 @@ const cardThemes: Record<
   },
   savings: {
     gradient: ["#1a2332", brand.blackSoft, brand.black],
-    accent: "#38bdf8",
+    accent: brand.orange,
     label: "Savings",
   },
   secondary: {
@@ -37,20 +40,28 @@ export function WalletCarousel({
   wallets: CustomerWallet[];
   selectedId: number;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const { openWalletActions } = useWallet();
+  const { width } = useWindowDimensions();
+  const [availableWidth, setAvailableWidth] = useState(Math.min(600, width - 40));
+  const cardWidth = availableWidth;
 
   return (
     <FlatList
       horizontal
+      onLayout={(event) => setAvailableWidth(event.nativeEvent.layout.width)}
       data={wallets}
       keyExtractor={(item) => String(item.id)}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.list}
-      snapToInterval={304}
+      snapToInterval={cardWidth + 12}
       decelerationRate="fast"
       renderItem={({ item }) => (
         <WalletSlide
           wallet={item}
+          width={cardWidth}
           active={item.id === selectedId}
           onPress={() => openWalletActions(item.id)}
         />
@@ -72,15 +83,18 @@ function BalanceToggle({
   onToggle: () => void;
   variant: "carousel" | "list";
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const isCarousel = variant === "carousel";
 
   return (
     <View style={isCarousel ? styles.balanceRow : styles.listBalanceRow}>
-      <Text style={isCarousel ? styles.balance : styles.listBalance}>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={isCarousel ? styles.balance : styles.listBalance}>
         {formatBalance(amount, currency, hidden)}
       </Text>
       <Pressable
-        onPress={onToggle}
+        onPress={(event) => { event.stopPropagation(); onToggle(); }}
         hitSlop={10}
         style={isCarousel ? styles.eyeBtn : styles.listEyeBtn}
         accessibilityLabel={hidden ? "Show balance" : "Hide balance"}
@@ -88,7 +102,7 @@ function BalanceToggle({
         <Ionicons
           name={hidden ? "eye-off-outline" : "eye-outline"}
           size={isCarousel ? 20 : 18}
-          color={isCarousel ? "rgba(255,255,255,0.85)" : colors.slate500}
+          color={isCarousel ? colors.primary : colors.slate500}
         />
       </Pressable>
     </View>
@@ -97,31 +111,36 @@ function BalanceToggle({
 
 function WalletSlide({
   wallet,
+  width,
   active,
   onPress,
 }: {
   wallet: CustomerWallet;
+  width: number;
   active: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const { balanceHidden, toggleBalanceHidden } = useWallet();
   const shortId = String(wallet.id).slice(-4);
   const theme = cardThemes[wallet.kind];
 
   return (
-    <Pressable onPress={onPress} style={[styles.cardOuter, active && styles.cardOuterActive, shadow.card]}>
-      <LinearGradient colors={theme.gradient} style={styles.card}>
-        <WalletCardArt variant="carousel" />
+    <Pressable accessibilityRole="button" accessibilityLabel={`${wallet.name} wallet actions`} onPress={onPress} style={[styles.cardOuter, { width }, active && styles.cardOuterActive]}>
+      <View style={styles.card}>
 
         <View style={styles.cardInner}>
           <View style={styles.top}>
             <SuturaLogo size={44} />
             <View style={styles.topRight}>
               <Text style={styles.kind}>{theme.label}</Text>
-              <Text style={styles.digits}>··· {shortId}</Text>
+              <Text style={styles.digits}>Wallet #{shortId}</Text>
             </View>
           </View>
 
+          <Text style={styles.balanceLabel}>Available balance</Text>
           <BalanceToggle
             amount={wallet.balance}
             currency={wallet.currency}
@@ -130,73 +149,58 @@ function WalletSlide({
             variant="carousel"
           />
 
-          <Text style={styles.tapHint}>Tap card for wallet actions</Text>
+          <Text style={styles.tapHint}>Manage wallet  →</Text>
 
-          <View style={styles.bottom}>
-            <View style={styles.bottomBlock}>
-              <Text style={styles.label}>Wallet</Text>
-              <Text style={styles.value}>{wallet.name}</Text>
-            </View>
-            <View style={[styles.bottomBlock, styles.bottomRight]}>
-              <Text style={styles.label}>Status</Text>
-              <Text style={[styles.value, { color: theme.accent }]}>{wallet.status}</Text>
-            </View>
-          </View>
+
         </View>
 
-        <View style={[styles.accentBar, { backgroundColor: theme.accent }]} />
-      </LinearGradient>
+      </View>
     </Pressable>
   );
 }
 
 export function WalletListCard({ wallet }: { wallet: CustomerWallet }) {
-  const { balanceHidden, toggleBalanceHidden, openWalletActions } = useWallet();
-  const shortId = String(wallet.id).slice(-4);
-  const theme = cardThemes[wallet.kind];
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
 
-  return (
-    <Pressable onPress={() => openWalletActions(wallet.id)} style={[styles.listCard, shadow.card]}>
-      <View style={styles.listArtPanel}>
-        <LinearGradient colors={[theme.gradient[0], theme.gradient[2]]} style={styles.listGradient}>
-          <WalletCardArt variant="compact" />
-          <SuturaLogo size={36} />
-        </LinearGradient>
+  const { balanceHidden, toggleBalanceHidden, openWalletActions } = useWallet();
+  const theme = cardThemes[wallet.kind];
+  return <Pressable accessibilityRole="button" accessibilityLabel={`${wallet.name} wallet actions`} onPress={() => openWalletActions(wallet.id)} style={[styles.listCard, shadow.card]}>
+    <View style={styles.listArtPanel}>
+      <LinearGradient colors={[theme.gradient[0], theme.gradient[2]]} style={styles.listGradient}>
+        <WalletCardArt variant="compact" />
+        <SuturaLogo size={36} />
+      </LinearGradient>
+    </View>
+    <View style={styles.listBody}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Text numberOfLines={1} style={[styles.listName, { flex: 1 }]}>{wallet.name}</Text>
+        <Text style={[styles.listStatus, { color: colors.slate700 }]}>{wallet.status}</Text>
       </View>
-      <View style={styles.listBody}>
-        <Text style={styles.listName}>{wallet.name}</Text>
-        <Text style={styles.listMeta}>
-          {wallet.currency} · ··· {shortId}
-        </Text>
+      <Text style={styles.listMeta}>{wallet.currency} · Wallet #{wallet.id}</Text>
+      <View style={{ marginTop: 8 }}>
+        <BalanceToggle amount={wallet.balance} currency={wallet.currency} hidden={balanceHidden} onToggle={toggleBalanceHidden} variant="list" />
       </View>
-      <View style={styles.listRight}>
-        <BalanceToggle
-          amount={wallet.balance}
-          currency={wallet.currency}
-          hidden={balanceHidden}
-          onToggle={toggleBalanceHidden}
-          variant="list"
-        />
-        <Text style={[styles.listStatus, { color: theme.accent }]}>{wallet.status}</Text>
-      </View>
-    </Pressable>
-  );
+    </View>
+  </Pressable>;
 }
 
-const styles = StyleSheet.create({
-  list: { paddingVertical: 4, paddingRight: 20 },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  list: { paddingVertical: 4 },
   cardOuter: {
-    borderRadius: radii.xl,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
     marginRight: 12,
     overflow: "hidden",
   },
   cardOuterActive: {
-    borderWidth: 2,
-    borderColor: brand.orange,
+    borderColor: colors.orange,
   },
   card: {
-    width: 292,
-    height: 180,
+    minHeight: 176,
+    backgroundColor: colors.surface,
     borderRadius: radii.xl,
     overflow: "hidden",
   },
@@ -227,7 +231,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   digits: {
-    color: "rgba(255,255,255,0.72)",
+    color: colors.slate500,
     fontFamily: fonts.medium,
     fontSize: 13,
     marginTop: 2,
@@ -236,11 +240,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 14,
+    marginTop: 4,
     gap: 8,
   },
+  balanceLabel: { color: colors.slate500, fontFamily: fonts.medium, fontSize: 12, marginTop: 16 },
+  status: { color: colors.primary, backgroundColor: colors.orangeLight, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, fontFamily: fonts.medium, fontSize: 11 },
   balance: {
-    color: colors.white,
+    color: colors.primary,
     fontSize: 24,
     fontFamily: fonts.black,
     letterSpacing: -0.5,
@@ -250,32 +256,36 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
   },
   tapHint: {
     fontSize: 10,
     fontFamily: fonts.regular,
-    color: "rgba(255,255,255,0.45)",
+    color: colors.slate500,
     marginTop: 4,
   },
   bottom: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: "auto",
+    marginTop: 18,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: 12,
   },
-  bottomBlock: { gap: 2 },
+  bottomBlock: { gap: 4, flex: 1, minWidth: 0 },
   bottomRight: { alignItems: "flex-end" },
   label: {
-    color: "rgba(255,255,255,0.5)",
+    color: colors.slate500,
     fontSize: 10,
     fontFamily: fonts.bold,
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   value: {
-    color: colors.white,
+    color: colors.primary,
     fontFamily: fonts.medium,
     fontSize: 13,
   },
@@ -290,8 +300,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   listArtPanel: {
-    width: 72,
-    height: 88,
+    width: 48,
+    alignSelf: "stretch",
+    minHeight: 116,
   },
   listGradient: {
     flex: 1,
@@ -299,10 +310,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
-  listBody: { flex: 1, paddingVertical: 14, paddingHorizontal: 12 },
+  listBody: { flex: 1, minWidth: 0, paddingVertical: 14, paddingHorizontal: 12 },
   listName: { fontSize: 16, fontFamily: fonts.bold, color: colors.slate900 },
   listMeta: { fontSize: 13, fontFamily: fonts.regular, color: colors.slate500, marginTop: 2 },
-  listRight: { alignItems: "flex-end", paddingRight: 16 },
+  listRight: { alignItems: "flex-end", maxWidth: "54%", paddingRight: 12 },
   listBalanceRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   listBalance: { fontSize: 15, fontFamily: fonts.bold, color: colors.slate900 },
   listEyeBtn: { padding: 4 },

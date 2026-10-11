@@ -1,12 +1,14 @@
 export const colors = {
-  background: "#eaf0ff",
+  background: "#ffffff",
   surface: "#ffffff",
-  surfaceMuted: "#f1f5f9",
-  border: "#dbeafe",
-  primary: "#123c91",
-  primaryDark: "#0d2f76",
-  primaryMid: "#1649a8",
+  surfaceMuted: "#f5f3ef",
+  border: "#e7e3dc",
+  primary: "#1f2328",
+  primaryDark: "#111315",
+  primaryMid: "#343a40",
+  primaryLight: "#525960",
   orange: "#f97316",
+  orangeDark: "#ea580c",
   orangeLight: "#ffedd5",
   white: "#ffffff",
   slate900: "#0f172a",
@@ -17,18 +19,32 @@ export const colors = {
   slate300: "#cbd5e1",
   emerald700: "#047857",
   emerald100: "#d1fae5",
+  rose500: "#f43f5e",
+  rose100: "#ffe4e6",
+  rose800: "#9f1239",
+  blue100: "#ffedd5",
   amber700: "#b45309",
   amber100: "#fef3c7",
-  rose500: "#f43f5e",
-  rose800: "#9f1239",
-  blue100: "#dbeafe",
+  chatAgent: "#e2e8f0",
+  chatUser: "#1f2328",
+};
+
+export type ThemeColors = { [Key in keyof typeof colors]: string };
+export const darkColors: ThemeColors = {
+  ...colors, background: "#181a20", surface: "#1e2329", surfaceMuted: "#2b3139",
+  border: "#353c45", primary: "#eaecef", primaryDark: "#ffffff", primaryMid: "#d8dce1",
+  primaryLight: "#b7bdc6", orangeLight: "#3c2c20", slate900: "#eaecef", slate800: "#d8dce1",
+  slate700: "#c5cbd3", slate500: "#a1a9b5", slate400: "#8d97a5", slate300: "#47515e",
+  amber700: "#f5c16c", amber100: "#3c3020",
+  emerald700: "#54d6a4", emerald100: "#15382c", rose500: "#ff8193", rose100: "#442731",
+  rose800: "#ff9eac", blue100: "#3c2c20", chatAgent: "#2b3139", chatUser: "#343a40",
 };
 
 export const radii = {
-  sm: 12,
-  md: 16,
-  lg: 20,
-  xl: 24,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
   pill: 999,
 };
 
@@ -38,18 +54,25 @@ export const spacing = {
 };
 
 export const fonts = {
-  regular: "SpaceGrotesk_400Regular",
-  medium: "SpaceGrotesk_500Medium",
-  bold: "SpaceGrotesk_700Bold",
-  black: "SpaceGrotesk_700Bold",
+  regular: "Inter_400Regular",
+  medium: "Inter_500Medium",
+  bold: "Inter_700Bold",
+  black: "Inter_700Bold",
 } as const;
 
 export const shadow = {
   card: {
-    shadowColor: "#123c91",
+    shadowColor: "#1f2328",
     shadowOpacity: 0.08,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
+  },
+  fab: {
+    shadowColor: "#f97316",
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
 };

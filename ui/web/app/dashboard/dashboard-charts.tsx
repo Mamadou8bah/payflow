@@ -5,7 +5,7 @@ import { useId } from "react";
 export type ChartPoint = { label: string; value: number };
 
 const CHART_COLORS = ["#123c91", "#debb30", "#10b981", "#8b5cf6", "#ef4444", "#0ea5e9"];
-const SUTURA_LOGO = "https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png";
+const SUTURA_LOGO = "/brand/sutura-logo.png";
 
 function ChartFrame({ height, children }: { height: number; children: React.ReactNode }) {
   return (

@@ -1,5 +1,4 @@
-export const SUTURA_LOGO_URI =
-  "https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png";
+export const SUTURA_LOGO: number = require("../../assets/sutura-logo.png");
 
 export const brand = {
   orange: "#f97316",

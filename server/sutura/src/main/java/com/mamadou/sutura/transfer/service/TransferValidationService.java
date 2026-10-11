@@ -38,11 +38,27 @@ public class TransferValidationService {
         transferRequestValidator.validate(request);
         User currentUser = currentUser();
         Long sourceWalletId = resolveSourceWalletId(request, currentUser);
-        if (sourceWalletId.equals(request.getDestinationWalletId())) {
+        Long destinationWalletId = request.getDestinationWalletId();
+        if (request.getRecipientPhone() != null) {
+            Wallet source = walletRepository.findByIdAndUserId(sourceWalletId, currentUser.getId())
+                    .orElseThrow(() -> new WalletNotFoundException("Source wallet not found"));
+            var recipients = userRepository.findTransferRecipientsByPhone(
+                    com.mamadou.sutura.transfer.validator.RecipientPhone.storedForms(request.getRecipientPhone()));
+            if (recipients.size() != 1) throw new WalletOperationException("No unique Sutura recipient found for this phone number");
+            User recipient = recipients.get(0);
+            if (recipient.getId() == currentUser.getId()) throw new WalletOperationException("Choose another recipient to send money");
+            destinationWalletId = walletRepository.findByUserId(recipient.getId()).stream()
+                    .filter(wallet -> wallet.getStatus() == WalletStatus.ACTIVE)
+                    .filter(wallet -> wallet.getCurrency().equalsIgnoreCase(source.getCurrency()))
+                    .min(java.util.Comparator.comparing(Wallet::getId))
+                    .orElseThrow(() -> new WalletOperationException("Recipient has no active wallet in " + source.getCurrency()))
+                    .getId();
+        }
+        if (sourceWalletId.equals(destinationWalletId)) {
             throw new WalletOperationException("Source and destination wallets must be different");
         }
         request.setSourceWalletId(sourceWalletId);
-        LockedWallets lockedWallets = lockWallets(sourceWalletId, request.getDestinationWalletId());
+        LockedWallets lockedWallets = lockWallets(sourceWalletId, destinationWalletId);
         Wallet sourceWallet = lockedWallets.sourceWallet();
         Wallet destinationWallet = lockedWallets.destinationWallet();
         if (sourceWallet.getUser().getId() != currentUser.getId()) {

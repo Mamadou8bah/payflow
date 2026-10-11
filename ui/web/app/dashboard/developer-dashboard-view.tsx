@@ -7,6 +7,7 @@ import { DataTable } from "./data-table";
 import { developerTabs } from "./dashboard-tabs";
 import { mockDeveloperDashboard } from "../../lib/mock/developer-dashboard";
 import { developerApi } from "../../lib/developer-api";
+import {getDemoSession} from "../../lib/demo-auth";
 import { getAuthSession } from "../../lib/auth-session";
 
 type Tab = "overview" | "keys" | "payments" | "webhooks";
@@ -42,7 +43,7 @@ function IntegrationSteps() {
 }
 
 export function DeveloperDashboardView() {
-  const [data, setData] = useState(mockDeveloperDashboard);
+  const [data, setData] = useState(()=>getDemoSession()&&!getAuthSession()?{...mockDeveloperDashboard,projectName:"Sample integration",stats:[{label:"Payments (30d)",value:"24",hint:"Sample payments"},{label:"Success rate",value:"95.8%",hint:"Sample activity"},{label:"Active API keys",value:"1",hint:"Sample key"}],apiKeys:[{id:"demo-key-1",name:"Sample checkout",prefix:"demo_sample_••••",created:"2026-10-11",lastUsed:"Sample activity",status:"active"}],payments:[{id:"demo-payment-1",reference:"DEMO-PAY-101",amount:"GMD 250.00",status:"completed",customer:"Sample customer",time:new Date().toISOString()}],webhookEvents:[{id:"demo-event-1",type:"payment.completed",status:"delivered",time:new Date().toISOString()}]}:mockDeveloperDashboard);
   const [tab, setTab] = useState<Tab>("overview");
   const [message, setMessage] = useState<Message>(null);
   const [keyForm, setKeyForm] = useState({ name: "" });
@@ -99,6 +100,7 @@ export function DeveloperDashboardView() {
         return;
       }
     }
+    if(getDemoSession()){const name=keyForm.name.trim();if(!name){notify("error","Enter a key name.");return;}const id=`demo-${Date.now()}`;setData(prev=>({...prev,apiKeys:[...prev.apiKeys,{id,name,prefix:"demo_only_••••",created:new Date().toISOString().slice(0,10),lastUsed:"Never",status:"active"}]}));setNewKeySecret("demo_only_not_a_valid_api_key");setKeyForm({name:""});notify("success","Sample key created locally. It cannot authenticate API requests.");return;}
     notify("error", "Please sign in to create API keys");
   }
 

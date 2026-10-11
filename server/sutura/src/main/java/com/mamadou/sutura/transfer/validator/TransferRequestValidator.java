@@ -10,9 +10,11 @@ import java.math.BigDecimal;
 public class TransferRequestValidator {
 
     public void validate(TransferRequest request) {
-        if (request.getDestinationWalletId() == null) {
-            throw new WalletOperationException("Destination wallet is required");
+        boolean hasPhone = request.getRecipientPhone() != null;
+        if (hasPhone == (request.getDestinationWalletId() != null)) {
+            throw new WalletOperationException("Provide a recipient phone number or destination wallet, not both");
         }
+        if (hasPhone) request.setRecipientPhone(RecipientPhone.normalize(request.getRecipientPhone()));
         if (request.getSourceWalletId() != null
                 && request.getSourceWalletId().equals(request.getDestinationWalletId())) {
             throw new WalletOperationException("Source and destination wallets must be different");

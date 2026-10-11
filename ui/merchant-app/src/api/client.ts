@@ -1,3 +1,4 @@
+import { availabilityFetch } from "./demo";
 import { API_BASE } from "./config";
 
 type ApiEnvelope<T> = {
@@ -7,7 +8,7 @@ type ApiEnvelope<T> = {
 };
 
 export async function post<T>(path: string, body: unknown): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await availabilityFetch(`${API_BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

@@ -1,16 +1,23 @@
+import {fonts as appFonts} from "../../theme";
+import {useTheme,useThemedStyles} from "../../context/ThemeContext";
+import type {ThemeColors} from "../../theme";
 import { useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { merchantRegistrationApi } from "../../api/merchantRegistration";
-import { AppInput, Field, LinkButton, PrimaryButton, Screen } from "../../components/ui";
+import { SuturaLogo, AppInput, Field, LinkButton, PrimaryButton, Screen } from "../../components/ui";
 import { StepIndicator } from "../../components/StepIndicator";
 import { useApp } from "../../context/AppContext";
 import { colors } from "../../theme";
 
 export function OtpScreen() {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const { reg, updateReg, setScreen, setError, error } = useApp();
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
+    if(loading)return;
     setError("");
     setLoading(true);
     try {
@@ -25,6 +32,7 @@ export function OtpScreen() {
 
   return (
     <Screen>
+      <View style={{marginBottom:24}}><SuturaLogo size={64}/></View>
       <Text style={styles.title}>Enter verification code</Text>
       <StepIndicator current={2} />
 
@@ -40,7 +48,7 @@ export function OtpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  title: { fontSize: 24, fontWeight: "800", color: colors.slate900 },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  title: {fontFamily: appFonts.bold, fontSize: 34, fontWeight: "700", color: colors.slate900 },
   error: { color: colors.rose800, fontWeight: "600" },
 });

@@ -1,3 +1,4 @@
+import { demoSession, isDemoMode, serverAvailable, setDemoMode, subscribeDemo } from "../api/demo";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { agentApi, type AuthSession } from "../api/client";
 import { bindTokenSession } from "../api/sessionAuth";
@@ -17,14 +18,16 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [loading, setLoading] = useState(true);
+  useEffect(() => subscribeDemo(() => setSession(isDemoMode() ? demoSession("AGENT") : null)), []);
 
   const persistSession = useCallback(async (stored: AuthSession) => {
-    await saveSession(SESSION_KEY, JSON.stringify(stored));
+    if (!stored.accessToken.startsWith("demo.")) await saveSession(SESSION_KEY, JSON.stringify(stored));
     setSession(stored);
   }, []);
 
   const signOut = useCallback(async () => {
-    await clearSession(SESSION_KEY);
+    if (!isDemoMode()) await clearSession(SESSION_KEY);
+    setDemoMode(false);
     setSession(null);
   }, []);
 
@@ -44,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         // Corrupted session — force re-login
       })
-      .finally(() => setLoading(false));
+      .finally(async () => { if (!(await serverAvailable())) setDemoMode(true); setLoading(false); });
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {

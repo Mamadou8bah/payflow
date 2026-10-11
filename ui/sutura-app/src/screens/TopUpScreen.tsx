@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from "react-native";
+import { isValidAmount, isPhoneDraft, normalizePhone } from "../utils/inputValidation";
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
+import { useRef, useState } from "react";
+import { KeyboardAvoidingView, Keyboard, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { BackHeader } from "../components/AppHeader";
 import { AgentQrCard } from "../components/AgentQrCard";
 import {
   AmountHero,
-  BalanceBanner,
   FormError,
   FormField,
   FormInput,
@@ -17,6 +19,9 @@ import { useWallet } from "../context/WalletContext";
 import { fonts, spacing } from "../theme";
 
 export function TopUpScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const {
     data,
     topUp,
@@ -32,22 +37,33 @@ export function TopUpScreen() {
   const [method, setMethod] = useState<"mobile_money" | "agent">("mobile_money");
   const [error, setError] = useState<string | null>(null);
 
+  const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   const submit = async () => {
-    const result = await topUp(Number(amount), method, phone, selectedWalletId);
-    if (!result.ok) setError(formatFraudError(result.error ?? "Top up failed"));
-    else setError(null);
+    if (submitting.current) return;
+    if (!isValidAmount(amount.trim())) {
+      setError("Enter an amount from 0.01 to 1,000,000,000,000, with at most four decimal places.");
+      return;
+    }
+    if (method === "mobile_money" && !normalizePhone(phone)) { setError("Enter a valid mobile-money phone number."); return; }
+    Keyboard.dismiss();
+    submitting.current = true; setBusy(true); setError(null);
+    try {
+      const result = await topUp(Number(amount), method, normalizePhone(phone) ?? phone, selectedWalletId);
+      if (!result.ok) setError(formatFraudError(result.error ?? "Top up failed"));
+    } finally { submitting.current = false; setBusy(false); }
   };
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <View style={styles.header}><BackHeader title="Top up wallet" onBack={() => setTab("home")} /></View>
       <ScrollView
         contentContainerStyle={styles.wrap}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <BackHeader title="Replenish" onBack={() => setTab("home")} />
 
-        <BalanceBanner wallet={selectedWallet} hidden={balanceHidden} label="Top up to" />
+
 
         <WalletPicker
           wallets={data.wallets}
@@ -69,7 +85,7 @@ export function TopUpScreen() {
 
         {method === "mobile_money" ? (
           <FormField label="Phone number">
-            <FormInput value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+            <FormInput value={phone} onChangeText={(value) => { if (isPhoneDraft(value)) setPhone(value); }} accessibilityLabel="Mobile money phone number" inputMode="tel" autoComplete="tel" maxLength={40} keyboardType="phone-pad" />
           </FormField>
         ) : (
           <Text style={styles.agentHint}>
@@ -78,7 +94,7 @@ export function TopUpScreen() {
         )}
 
         <FormError message={error} />
-        <SubmitButton
+        <SubmitButton loading={busy} disabled={!amount.trim() || !selectedWallet.id}
           label={method === "mobile_money" ? "Pay with mobile money" : "Generate deposit QR"}
           onPress={submit}
         />
@@ -91,8 +107,9 @@ export function TopUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   flex: { flex: 1 },
-  wrap: { padding: spacing.screen, paddingBottom: 120, gap: spacing.gap },
-  agentHint: { fontSize: 14, fontFamily: fonts.regular, color: "#64748b", lineHeight: 20 },
+  header: { paddingHorizontal: spacing.screen, paddingTop: spacing.screen },
+  wrap: { padding: spacing.screen, paddingBottom: 32, gap: spacing.gap },
+  agentHint: { fontSize: 14, fontFamily: fonts.regular, color: colors.slate500, lineHeight: 20 },
 });

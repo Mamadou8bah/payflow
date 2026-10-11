@@ -1,16 +1,19 @@
+import { ScanScreen } from "./src/screens/ScanScreen";
+import { useTheme, useThemedStyles, ThemeProvider } from "./src/context/ThemeContext";
+import type { ThemeColors } from "./src/theme";
 import {
 
-  SpaceGrotesk_400Regular,
+  Inter_400Regular,
 
-  SpaceGrotesk_500Medium,
+  Inter_500Medium,
 
-  SpaceGrotesk_600SemiBold,
+  Inter_600SemiBold,
 
-  SpaceGrotesk_700Bold,
+  Inter_700Bold,
 
   useFonts,
 
-} from "@expo-google-fonts/space-grotesk";
+} from "@expo-google-fonts/inter";
 
 import { useEffect, useRef } from "react";
 
@@ -58,11 +61,14 @@ import type { TabId } from "./src/types";
 
 
 
-const mainTabs = new Set<TabId>(["home", "wallets", "send", "activity", "more"]);
+const mainTabs = new Set<TabId>(["home", "wallets", "scan", "send", "activity", "more"]);
 
 
 
 function MainApp() {
+  const { colors, mode } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
 
   const { tab, setTab } = useWallet();
 
@@ -74,7 +80,7 @@ function MainApp() {
 
     <SafeAreaView style={styles.safeArea}>
 
-      <StatusBar style="dark" />
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
 
       <View style={styles.body}>
 
@@ -82,6 +88,7 @@ function MainApp() {
 
         {tab === "wallets" && <WalletsScreen />}
 
+        {tab === "scan" && <ScanScreen />}
         {tab === "send" && <SendScreen />}
 
         {tab === "activity" && <ActivityScreen />}
@@ -117,6 +124,9 @@ function MainApp() {
 
 
 function Root() {
+  const { colors, mode } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
 
   const { session, loading } = useAuth();
 
@@ -154,17 +164,20 @@ function Root() {
 
 
 
-export default function App() {
+function ThemedApp() {
+  const { colors, mode } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
 
   const [fontsLoaded] = useFonts({
 
-    SpaceGrotesk_400Regular,
+    Inter_400Regular,
 
-    SpaceGrotesk_500Medium,
+    Inter_500Medium,
 
-    SpaceGrotesk_600SemiBold,
+    Inter_600SemiBold,
 
-    SpaceGrotesk_700Bold,
+    Inter_700Bold,
 
   });
 
@@ -206,6 +219,7 @@ export default function App() {
 
     <AuthProvider>
 
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <Root />
 
     </AuthProvider>
@@ -216,12 +230,14 @@ export default function App() {
 
 
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
 
-  safeArea: { flex: 1, backgroundColor: colors.background },
+  safeArea: { flex: 1, minHeight: 0, height: "100%", width: "100%", maxWidth: 640, alignSelf: "center", backgroundColor: colors.background },
 
-  body: { flex: 1 },
+  body: { flex: 1, minHeight: 0 },
 
   loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
 
 });
+
+export default function App() { return <ThemeProvider><ThemedApp /></ThemeProvider>; }

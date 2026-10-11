@@ -1,7 +1,7 @@
 import { findDemoUser, getDashboardPath, type DemoRole, type DemoUser } from "./mock/demo-users";
 
-/** Demo logins are opt-in for local development only. Never enable in production builds. */
-export const DEMO_AUTH_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true";
+/** Local previews allow sample accounts; production builds never enable demo auth. */
+export const DEMO_AUTH_ENABLED = process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH !== "false";
 
 const SESSION_KEY = "sutura_demo_session";
 

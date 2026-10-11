@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from "react-native";
+import { isValidAmount, isPhoneDraft, normalizePhone } from "../utils/inputValidation";
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
+import { useRef, useState } from "react";
+import { KeyboardAvoidingView, Keyboard, Platform, ScrollView, StyleSheet, Text } from "react-native";
 import { BackHeader } from "../components/AppHeader";
 import { AgentQrCard } from "../components/AgentQrCard";
 import {
   AmountHero,
-  BalanceBanner,
   FormError,
   SubmitButton,
   WalletPicker,
@@ -14,6 +16,9 @@ import { useWallet } from "../context/WalletContext";
 import { fonts, spacing } from "../theme";
 
 export function WithdrawScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const {
     data,
     withdraw,
@@ -27,10 +32,20 @@ export function WithdrawScreen() {
   const [amount, setAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   const submit = async () => {
-    const result = await withdraw(Number(amount), selectedWalletId);
-    if (!result.ok) setError(formatFraudError(result.error ?? "Withdrawal failed"));
-    else setError(null);
+    if (submitting.current) return;
+    if (!isValidAmount(amount.trim())) {
+      setError("Enter an amount from 0.01 to 1,000,000,000,000, with at most four decimal places.");
+      return;
+    }
+    Keyboard.dismiss();
+    submitting.current = true; setBusy(true); setError(null);
+    try {
+      const result = await withdraw(Number(amount), selectedWalletId);
+      if (!result.ok) setError(formatFraudError(result.error ?? "Withdrawal failed"));
+    } finally { submitting.current = false; setBusy(false); }
   };
 
   return (
@@ -44,7 +59,6 @@ export function WithdrawScreen() {
 
         <Text style={styles.subtitle}>Collect cash from any Sutura agent near you.</Text>
 
-        <BalanceBanner wallet={selectedWallet} hidden={balanceHidden} />
 
         <WalletPicker
           wallets={data.wallets}
@@ -56,7 +70,7 @@ export function WithdrawScreen() {
         <AmountHero amount={amount} onChange={setAmount} currency={selectedWallet.currency} />
 
         <FormError message={error} />
-        <SubmitButton label="Request withdrawal" onPress={submit} />
+        <SubmitButton loading={busy} disabled={!amount.trim() || !selectedWallet.id} label="Request withdrawal" onPress={submit} />
 
         {withdrawalQr ? (
           <AgentQrCard payload={withdrawalQr} title="Withdrawal QR code" hint="Show this to receive cash." />
@@ -66,8 +80,8 @@ export function WithdrawScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   flex: { flex: 1 },
-  wrap: { padding: spacing.screen, paddingBottom: 120, gap: spacing.gap },
-  subtitle: { fontSize: 14, fontFamily: fonts.regular, color: "#64748b", marginTop: -8 },
+  wrap: { padding: spacing.screen, paddingBottom: 32, gap: spacing.gap },
+  subtitle: { fontSize: 14, fontFamily: fonts.regular, color: colors.slate500, marginTop: -8 },
 });

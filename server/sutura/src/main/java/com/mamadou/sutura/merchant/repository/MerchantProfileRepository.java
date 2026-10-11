@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MerchantProfileRepository extends JpaRepository<MerchantProfile, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select m from MerchantProfile m where m.id = :id")
+    Optional<MerchantProfile> findForReview(@org.springframework.data.repository.query.Param("id") Long id);
     Optional<MerchantProfile> findByUserId(Long userId);
     List<MerchantProfile> findByVerificationStatusOrderBySubmittedAtDesc(MerchantVerificationStatus status);
 }

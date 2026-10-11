@@ -62,6 +62,8 @@ public class TransferService {
             if (rawKey == null) rawKey = request.getReference();
             if (rawKey != null && rawKey.length() > 160) throw new IllegalArgumentException("Idempotency key is too long");
             String idempotencyKey = scopedKey(userId, rawKey);
+            if (request.getRecipientPhone() != null) request.setRecipientPhone(
+                    com.mamadou.sutura.transfer.validator.RecipientPhone.normalize(request.getRecipientPhone()));
             String fingerprint = fingerprint(request);
 
             TransferResponse response = idempotencyService.findExistingTransaction(idempotencyKey, fingerprint)
@@ -122,7 +124,8 @@ public class TransferService {
                 + request.getDestinationWalletId() + "|"
                 + request.getAmount() + "|"
                 + nullToBlank(request.getDescription()) + "|"
-                + nullToBlank(request.getReference());
+                + nullToBlank(request.getReference())
+                + (request.getRecipientPhone() == null ? "" : "|phone:" + request.getRecipientPhone());
     }
 
     private String scopedKey(Long userId, String rawKey) {

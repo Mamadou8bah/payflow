@@ -1,3 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useWallet } from "../context/WalletContext";
 import { colors, fonts, radii } from "../theme";
@@ -11,15 +14,21 @@ export function TransactionRow({
   txn: CustomerTransaction;
   onPress?: () => void;
 }) {
-  const { openTransaction } = useWallet();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
+  const { openTransaction, balanceHidden } = useWallet();
   const isCredit = txn.type === "TRANSFER_IN" || txn.type === "DEPOSIT";
   const sign = isCredit ? "+" : "−";
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`View ${txn.counterparty} transaction`}
       onPress={onPress ?? (() => openTransaction(txn.id))}
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
     >
+      <View style={styles.icon}><Ionicons name={txn.type === "DEPOSIT" ? "add-outline" : txn.type === "WITHDRAWAL" ? "cash-outline" : isCredit ? "arrow-down-outline" : "arrow-up-outline"} size={21} color={colors.primary}/></View>
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={1}>
           {txn.counterparty}
@@ -29,32 +38,30 @@ export function TransactionRow({
         </Text>
       </View>
       <View style={styles.right}>
-        <Text style={styles.amount}>
-          {sign}
-          {formatMoney(txn.amount, txn.currency)}
+        <Text numberOfLines={1} adjustsFontSizeToFit style={styles.amount}>
+          {balanceHidden ? "••••" : `${sign}${formatMoney(txn.amount, txn.currency)}`}
         </Text>
-        <Text style={styles.method}>{txn.category ?? txn.method}</Text>
+        <Text style={[styles.method, {color: txn.status === "FAILED" ? colors.rose800 : txn.status === "COMPLETED" ? colors.slate500 : colors.orangeDark}]}>{txn.status === "COMPLETED" ? "Completed" : txn.status === "FAILED" ? "Failed" : "Pending"}</Text>
       </View>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: colors.border,
+    paddingVertical: 16,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
+  icon: {width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surfaceMuted, alignItems: "center", justifyContent: "center"},
   rowPressed: { opacity: 0.88 },
-  body: { flex: 1, minWidth: 0, paddingRight: 12 },
-  name: { fontSize: 15, fontFamily: fonts.medium, color: colors.slate900 },
+  body: { flex: 1, minWidth: 0, paddingRight: 0 },
+  name: { fontSize: 14, fontFamily: fonts.medium, color: colors.slate900 },
   meta: { fontSize: 12, fontFamily: fonts.regular, color: colors.slate500, marginTop: 2 },
-  right: { alignItems: "flex-end" },
-  amount: { fontSize: 15, fontFamily: fonts.bold, color: colors.slate900 },
+  right: { alignItems: "flex-end", maxWidth: "45%" },
+  amount: { fontSize: 13, fontFamily: fonts.bold, color: colors.slate900 },
   method: { fontSize: 11, fontFamily: fonts.regular, color: colors.slate500, marginTop: 2 },
 });

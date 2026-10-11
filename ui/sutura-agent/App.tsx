@@ -1,10 +1,13 @@
+import { SettingsScreen } from "./src/screens/SettingsScreen";
+import {useTheme,useThemedStyles,ThemeProvider} from "./src/context/ThemeContext";
+import type {ThemeColors} from "./src/theme";
 import {
-  SpaceGrotesk_400Regular,
-  SpaceGrotesk_500Medium,
-  SpaceGrotesk_600SemiBold,
-  SpaceGrotesk_700Bold,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
   useFonts,
-} from "@expo-google-fonts/space-grotesk";
+} from "@expo-google-fonts/inter";
 import { useEffect, useRef } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, SafeAreaView, StyleSheet, View } from "react-native";
@@ -29,12 +32,15 @@ import type { TabId } from "./src/types";
 const mainTabs = new Set<TabId>(["home", "scan", "queue", "activity", "more"]);
 
 function MainApp() {
+ const {colors,mode}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const { tab, setTab } = useAgent();
   const showNav = mainTabs.has(tab);
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <View style={styles.body}>
         {tab === "home" && <HomeScreen />}
         {tab === "scan" && <ScanScreen />}
@@ -45,6 +51,7 @@ function MainApp() {
         {tab === "new-deposit" && <NewDepositScreen />}
         {tab === "new-withdrawal" && <NewWithdrawalScreen />}
         {tab === "profile" && <ProfileScreen />}
+        {tab === "settings" && <SettingsScreen />}
         {tab === "support" && <SupportScreen />}
       </View>
 
@@ -54,6 +61,9 @@ function MainApp() {
 }
 
 function Root() {
+ const {colors,mode}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const { session, loading } = useAuth();
   if (loading) {
     return (
@@ -72,12 +82,15 @@ function Root() {
   );
 }
 
-export default function App() {
+function ThemedApp() {
+ const {colors,mode}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const [fontsLoaded] = useFonts({
-    SpaceGrotesk_400Regular,
-    SpaceGrotesk_500Medium,
-    SpaceGrotesk_600SemiBold,
-    SpaceGrotesk_700Bold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
   const fontsApplied = useRef(false);
 
@@ -98,13 +111,16 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <StatusBar style={mode === "dark" ? "light" : "dark"}/>
       <Root />
     </AuthProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: colors.background },
-  body: { flex: 1 },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  safeArea: { flex: 1, minHeight: 0, height: "100%", width: "100%", maxWidth: 640, alignSelf: "center", backgroundColor: colors.background },
+  body: { flex: 1, minHeight: 0 },
   loading: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background },
 });
+
+export default function App(){return <ThemeProvider><ThemedApp/></ThemeProvider>;}

@@ -1,3 +1,6 @@
+import {Ionicons} from "@expo/vector-icons";
+import {useTheme,useThemedStyles} from "../context/ThemeContext";
+import type {ThemeColors} from "../theme";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AppHeader } from "../components/AppHeader";
 import { OperationRow } from "../components/OperationRow";
@@ -7,6 +10,9 @@ import { useAgent } from "../context/AgentContext";
 import { colors, fonts, spacing } from "../theme";
 
 export function HomeScreen() {
+ const {colors}=useTheme();
+ const styles=useThemedStyles(createStyles);
+
   const { stats, setTab, recentCompleted, openOperation } = useAgent();
 
   return (
@@ -17,20 +23,20 @@ export function HomeScreen() {
 
       <QuickActionGrid
         actions={[
-          { label: "Scan QR", icon: "qr-code-outline", color: colors.orange, onPress: () => setTab("scan") },
           {
             label: "Cash-in",
+            hint: "Deposit for a customer",
             icon: "arrow-down-circle-outline",
             color: colors.emerald700,
             onPress: () => setTab("new-deposit"),
           },
           {
             label: "Cash-out",
+            hint: "Withdraw for a customer",
             icon: "arrow-up-circle-outline",
             color: colors.primary,
             onPress: () => setTab("new-withdrawal"),
           },
-          { label: "Queue", icon: "time-outline", color: colors.primaryMid, onPress: () => setTab("queue") },
         ]}
       />
 
@@ -41,6 +47,7 @@ export function HomeScreen() {
         </Pressable>
       </View>
 
+      {recentCompleted.length === 0 && <View style={{borderWidth:1,borderStyle:"dashed",borderColor:colors.border,borderRadius:16,padding:24,alignItems:"center",gap:12}}><Ionicons name="receipt-outline" size={30} color={colors.orange}/><Text style={{fontFamily:fonts.medium,color:colors.primary,fontSize:16,textAlign:"center"}}>Ready for your next customer</Text><Text style={{fontFamily:fonts.regular,color:colors.slate500,fontSize:12,textAlign:"center",lineHeight:19}}>Your completed cash-in and cash-out operations will appear here.</Text></View>}
       {recentCompleted.map((op) => (
         <OperationRow key={op.reference} op={op} onPress={() => openOperation(op)} />
       ))}
@@ -48,8 +55,8 @@ export function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  content: { padding: spacing.screen, paddingBottom: 32, gap: spacing.gap },
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
+  content: { padding: spacing.screen, paddingBottom: 32, gap: 22 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
   sectionTitle: { fontSize: 18, fontFamily: fonts.bold, color: colors.slate900 },
   seeAll: { fontSize: 14, fontFamily: fonts.medium, color: colors.primary },

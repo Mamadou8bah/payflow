@@ -109,6 +109,67 @@ class TransferLedgerIntegrationTest {
 
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
 
+    @Test void phoneTransferResolvesFormattedNumberAndReplaysOnce() {
+        String local = String.format("%07d", 7000000L + recipient.getId());
+        recipient.setPhoneNumber("+220 " + local.substring(0, 3) + " " + local.substring(3));
+        users.save(recipient);
+        var request = request("50");
+        request.setDestinationWalletId(null);
+        request.setRecipientPhone(local);
+        var first = transfers.transfer(request, request.getReference());
+        request.setRecipientPhone("00220" + local);
+        var replay = transfers.transfer(request, request.getReference());
+        assertThat(first.getTransaction().getStatus()).isEqualTo(TransactionStatus.COMPLETED);
+        assertThat(replay.isIdempotentReplay()).isTrue();
+        assertBalances("50", "50");
+        assertThat(postings.findByTraceIdOrderByIdAsc(request.getReference())).hasSize(2);
+    }
+
+    @Test void unknownPhoneDoesNotDebitSender() {
+        var request = request("50");
+        request.setDestinationWalletId(null);
+        request.setRecipientPhone("+2209999999");
+        assertThatThrownBy(() -> transfers.transfer(request, request.getReference()))
+                .hasMessageContaining("No unique Sutura recipient");
+        assertBalances("100", "0");
+    }
+
+    @Test void phoneTransferRejectsMissingCurrencyWallet() {
+        recipient.setPhoneNumber("+220" + String.format("%07d", recipient.getId()));
+        users.save(recipient);
+        var wallet = walletRepository.findById(destination).orElseThrow();
+        wallet.setCurrency("USD"); walletRepository.save(wallet);
+        var request = request("50");
+        request.setDestinationWalletId(null); request.setRecipientPhone(recipient.getPhoneNumber());
+        assertThatThrownBy(() -> transfers.transfer(request, request.getReference()))
+                .hasMessageContaining("no active wallet in GMD");
+        assertBalances("100", "0");
+    }
+
+    @Test void phoneTransferRejectsOwnNumberAndAmbiguousRecipient() {
+        sender.setPhoneNumber("+220" + String.format("%07d", sender.getId()));
+        users.save(sender);
+        var request = request("50");
+        request.setDestinationWalletId(null); request.setRecipientPhone(sender.getPhoneNumber());
+        assertThatThrownBy(() -> transfers.transfer(request, request.getReference()))
+                .hasMessageContaining("Choose another recipient");
+        recipient.setPhoneNumber(sender.getPhoneNumber().substring(4)); users.save(recipient);
+        assertThatThrownBy(() -> transfers.transfer(request, request.getReference()))
+                .hasMessageContaining("No unique Sutura recipient");
+        assertBalances("100", "0");
+    }
+
+    @Test void phoneTransferCannotChangeRecipientOnReplay() {
+        recipient.setPhoneNumber("+220" + String.format("%07d", recipient.getId())); users.save(recipient);
+        var request = request("50"); request.setDestinationWalletId(null);
+        request.setRecipientPhone(recipient.getPhoneNumber());
+        transfers.transfer(request, request.getReference());
+        request.setRecipientPhone("+2209999999");
+        assertThatThrownBy(() -> transfers.transfer(request, request.getReference()))
+                .hasMessageContaining("different request");
+        assertBalances("50", "50");
+    }
+
     @Test void allowAndReplayMoveMoneyAndUsageOnce() {
         var request = request("50");
         var first = transfers.transfer(request, request.getReference());

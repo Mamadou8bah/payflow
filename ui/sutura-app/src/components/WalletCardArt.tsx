@@ -1,8 +1,13 @@
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Stop } from "react-native-svg";
 import { StyleSheet, View } from "react-native";
 import { brand } from "../constants/brand";
 
 export function WalletCardArt({ variant = "carousel" }: { variant?: "carousel" | "compact" }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const height = variant === "carousel" ? 180 : 88;
 
   return (
@@ -63,7 +68,7 @@ export function WalletCardArt({ variant = "carousel" }: { variant?: "carousel" |
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   wrap: {
     ...StyleSheet.absoluteFillObject,
     overflow: "hidden",

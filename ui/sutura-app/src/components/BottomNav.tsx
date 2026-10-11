@@ -1,3 +1,5 @@
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { brand } from "../constants/brand";
@@ -9,12 +11,15 @@ type NavItem = { id: TabId; label: string; icon: keyof typeof Ionicons.glyphMap 
 const tabs: NavItem[] = [
   { id: "home", label: "Home", icon: "home-outline" },
   { id: "wallets", label: "Wallets", icon: "wallet-outline" },
-  { id: "send", label: "Send", icon: "paper-plane-outline" },
+  { id: "scan", label: "Scan", icon: "scan-outline" },
   { id: "activity", label: "Activity", icon: "receipt-outline" },
   { id: "more", label: "More", icon: "person-outline" },
 ];
 
 export function BottomNav({ active, onChange }: { active: TabId; onChange: (tab: TabId) => void }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.capsule}>
@@ -23,15 +28,18 @@ export function BottomNav({ active, onChange }: { active: TabId; onChange: (tab:
           return (
             <Pressable
               key={item.id}
+              accessibilityRole="tab"
+              accessibilityLabel={item.label}
+              accessibilityState={{ selected: isActive }}
               onPress={() => onChange(item.id)}
               style={[styles.item, isActive && styles.itemActive]}
             >
               <Ionicons
                 name={item.icon}
                 size={22}
-                color={isActive ? colors.white : colors.slate500}
+                color={isActive ? colors.orange : colors.slate500}
               />
-              {isActive ? <Text style={styles.label}>{item.label}</Text> : null}
+              <Text numberOfLines={1} style={[styles.label, { color: isActive ? colors.orange : colors.slate500 }]}>{item.label}</Text>
             </Pressable>
           );
         })}
@@ -40,46 +48,46 @@ export function BottomNav({ active, onChange }: { active: TabId; onChange: (tab:
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   wrapper: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-    backgroundColor: "transparent",
+    paddingHorizontal: 0,
+    paddingTop: 0,
+    paddingBottom: 4,
+    backgroundColor: colors.surface,
   },
   capsule: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.white,
-    borderRadius: radii.pill,
-    paddingVertical: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 0,
+    paddingVertical: 4,
     paddingHorizontal: 10,
-    borderWidth: 1,
+    borderTopWidth: 1,
     borderColor: colors.border,
-    shadowColor: brand.orange,
-    shadowOpacity: 0.18,
+    shadowColor: "#000000",
+    shadowOpacity: 0,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 10,
+    elevation: 0,
   },
   item: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    minHeight: 52,
+    minWidth: 0,
+    gap: 4,
     paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: radii.pill,
+    paddingHorizontal: 2,
+    borderRadius: 0,
   },
   itemActive: {
-    flexGrow: 1.6,
-    backgroundColor: brand.orange,
-    paddingHorizontal: 14,
+    backgroundColor: "transparent",
   },
   label: {
-    fontSize: 14,
+    fontSize: 11,
     fontFamily: fonts.medium,
     color: colors.white,
   },

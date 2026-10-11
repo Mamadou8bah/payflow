@@ -1,3 +1,4 @@
+import { availabilityFetch } from "./demo";
 import { API_BASE } from "./config";
 import { authFetch, readAuthJson } from "./sessionAuth";
 
@@ -70,7 +71,7 @@ export type WithdrawalResponse = {
 };
 
 async function envelopeRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await availabilityFetch(`${API_BASE}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
   });
@@ -94,7 +95,14 @@ async function authRequest<T>(path: string, init?: RequestInit): Promise<T> {
 
 export type CustomerRegistration = { firstName: string; lastName: string; phoneNumber: string; email?: string; password: string };
 
+export type MerchantPayment = {
+  reference: string; merchantName: string; amount: number; currency: string;
+  status: string; description?: string; transactionReference?: string; expiresAt?: string;
+};
+
 export const api = {
+  lookupMerchantPayment: (reference: string) => authRequest<MerchantPayment>(`/api/v1/payment-links/ref/${encodeURIComponent(reference)}`),
+  payMerchant: (reference: string, walletId: number) => authRequest<MerchantPayment>(`/api/v1/payment-links/ref/${encodeURIComponent(reference)}/pay`, {method:"POST", body:JSON.stringify({walletId})}),
   register: (payload: CustomerRegistration) => envelopeRequest<AuthSession>("/api/auth/register", { method: "POST", body: JSON.stringify({ ...payload, role: "USER", twoFactorEnabled: false }) }),
   login: (email: string, password: string) =>
     envelopeRequest<AuthSession & { twoFactorRequired?: boolean }>("/api/auth/login", {
@@ -103,13 +111,16 @@ export const api = {
     }),
 
   listWallets: () => authRequest<WalletResponse[]>("/api/v1/wallets"),
+  createWallet: (name: string, currency: string) => authRequest<WalletResponse>("/api/v1/wallets", {
+    method: "POST", body: JSON.stringify({ name, currency }),
+  }),
 
   getBalance: (walletId: number) => authRequest<WalletBalance>(`/api/v1/wallets/${walletId}/balance`),
 
   listTransactions: () => authRequest<TransactionResponse[]>("/api/v1/transactions"),
 
   createTransfer: (payload: {
-    destinationWalletId: number;
+    recipientPhone: string;
     sourceWalletId?: number;
     amount: number;
     description?: string;

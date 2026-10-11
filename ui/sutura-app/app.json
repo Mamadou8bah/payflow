@@ -5,8 +5,14 @@
     "scheme": "suturaapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "platforms": ["ios", "android", "web"],
-    "assetBundlePatterns": ["**/*"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "bundleIdentifier": "gm.sutura.customer",
       "supportsTablet": false
@@ -22,6 +28,17 @@
         "projectId": "sutura-customer-app"
       }
     },
-    "plugins": ["expo-asset", "expo-font", "expo-secure-store"]
+    "plugins": [
+      "expo-asset",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Sutura to scan merchant payment QR codes.",
+          "recordAudioAndroid": false
+        }
+      ]
+    ]
   }
 }

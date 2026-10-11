@@ -1,3 +1,4 @@
+import { availabilityFetch, demoResponse, isDemoMode } from "./demo";
 import { API_BASE } from "./config";
 
 export type TokenSession = {
@@ -33,7 +34,7 @@ async function refreshAccessToken(): Promise<string | null> {
     if (!session?.refreshToken) return null;
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/refresh`, {
+      const response = await availabilityFetch(`${API_BASE}/api/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken: session.refreshToken }),
@@ -61,11 +62,12 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 export async function authFetch(path: string, init?: RequestInit): Promise<Response> {
+  if (isDemoMode()) return demoResponse(path, init);
   const session = handlers?.getSession();
   if (!session?.accessToken) throw new Error("Not authenticated");
 
   const withAuth = (token: string) =>
-    fetch(`${API_BASE}${path}`, {
+    availabilityFetch(`${API_BASE}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
@@ -79,14 +81,15 @@ export async function authFetch(path: string, init?: RequestInit): Promise<Respo
 
   const newToken = await refreshAccessToken();
   if (!newToken) {
+    if (isDemoMode()) throw new Error("Server unavailable. Demo mode opened; the live request was not replayed.");
     await handlers?.clearSession();
-    throw new Error("Session expired â€” please sign in again");
+    throw new Error("Session expired — please sign in again");
   }
 
   response = await withAuth(newToken);
   if (response.status === 401) {
     await handlers?.clearSession();
-    throw new Error("Session expired â€” please sign in again");
+    throw new Error("Session expired — please sign in again");
   }
   return response;
 }

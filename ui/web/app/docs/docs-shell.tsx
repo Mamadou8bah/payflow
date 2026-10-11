@@ -36,7 +36,7 @@ export function DocsShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex h-16 w-full max-w-[1440px] items-center gap-4 px-4 lg:px-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <img
-              src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+              src="/brand/sutura-logo.png"
               alt="Sutura"
               className="h-8 w-8 object-contain"
             />

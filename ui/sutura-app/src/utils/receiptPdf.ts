@@ -1,7 +1,8 @@
 import * as FileSystem from "expo-file-system";
+import { Asset } from "expo-asset";
 import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
-import { SUTURA_LOGO_URI } from "../constants/brand";
+import { SUTURA_LOGO } from "../constants/brand";
 import type { CustomerTransaction } from "../types";
 import { formatMoney, formatTimestamp } from "./format";
 import {
@@ -45,33 +46,27 @@ function sanitizePdfText(value: string): string {
 }
 
 async function getLogoBytes(): Promise<ArrayBuffer> {
-  if (Platform.OS === "web") {
-    if (!logoBytesPromise) {
-      logoBytesPromise = fetch(SUTURA_LOGO_URI).then((res) => {
-        if (!res.ok) throw new Error("Logo download failed");
-        return res.arrayBuffer();
-      });
-    }
-    return logoBytesPromise;
-  }
-
   if (!logoBytesPromise) {
     logoBytesPromise = (async () => {
-      const cachePath = `${FileSystem.cacheDirectory}sutura-logo.png`;
-      const info = await FileSystem.getInfoAsync(cachePath);
-      if (!info.exists) {
-        await FileSystem.downloadAsync(SUTURA_LOGO_URI, cachePath);
+      const asset = Asset.fromModule(SUTURA_LOGO);
+      if (Platform.OS === "web") {
+        const response = await fetch(asset.uri);
+        if (!response.ok) throw new Error("Logo could not be loaded");
+        return response.arrayBuffer();
       }
-      const base64 = await FileSystem.readAsStringAsync(cachePath, {
+      await asset.downloadAsync();
+      if (!asset.localUri) throw new Error("Logo asset is unavailable");
+      const base64 = await FileSystem.readAsStringAsync(asset.localUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
       return base64ToArrayBuffer(base64);
-    })();
+    })().catch((error) => {
+      logoBytesPromise = null;
+      throw error;
+    });
   }
-
   return logoBytesPromise;
 }
-
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);

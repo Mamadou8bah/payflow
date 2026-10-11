@@ -1,3 +1,5 @@
+import { useTheme, useThemedStyles } from "../context/ThemeContext";
+import type { ThemeColors } from "../theme";
 import QRCode from "react-native-qrcode-svg";
 import { StyleSheet, Text, View } from "react-native";
 import { colors, radii } from "../theme";
@@ -14,6 +16,9 @@ export function AgentQrCard({
   title: string;
   hint?: string;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   const value = encodeAgentQrPayload(payload);
 
   return (
@@ -51,6 +56,9 @@ function Detail({
   highlight?: boolean;
   status?: boolean;
 }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.detailRow}>
       <Text style={styles.detailLabel}>{label}</Text>
@@ -61,9 +69,9 @@ function Detail({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   wrap: {
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: radii.lg,
     padding: 16,
     marginTop: 16,
@@ -72,7 +80,7 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12, color: colors.slate500, marginTop: 4 },
   content: { flexDirection: "row", flexWrap: "wrap", gap: 16, marginTop: 16, alignItems: "flex-start" },
   qrBox: {
-    backgroundColor: colors.white,
+    backgroundColor: "#ffffff",
     borderRadius: radii.md,
     padding: 16,
     shadowColor: "#000",
@@ -82,7 +90,7 @@ const styles = StyleSheet.create({
   },
   details: { flex: 1, minWidth: 140, gap: 8 },
   detailRow: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radii.sm,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -96,6 +104,6 @@ const styles = StyleSheet.create({
   },
   detailValue: { fontSize: 13, fontWeight: "700", color: colors.slate900, marginTop: 2 },
   detailHighlight: { color: colors.primary, fontFamily: "monospace", fontSize: 12 },
-  detailStatus: { color: "#b45309" },
+  detailStatus: { color: colors.orange },
   footer: { fontSize: 12, fontWeight: "600", color: colors.slate500, marginTop: 16, textAlign: "center" },
 });

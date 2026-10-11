@@ -121,7 +121,7 @@ export function LandingHeader({ groups }: { groups: LandingNavGroup[] }) {
       <div className="mx-auto flex h-14 w-[min(1280px,calc(100%-1.5rem))] items-center gap-3 sm:h-16">
         <a href="/" className="flex shrink-0 items-center gap-2.5">
           <img
-            src="https://res.cloudinary.com/dflsnes44/image/upload/v1780228196/sutura_no_bg_f0l7on.png"
+            src="/brand/sutura-logo.png"
             alt="Sutura"
             className="h-8 w-8 object-contain sm:h-9 sm:w-9"
           />
